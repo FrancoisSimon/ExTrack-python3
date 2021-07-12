@@ -368,13 +368,13 @@ def extract_params(params, dt, states_nb, nb_substeps):
 def cum_Proba_Cs(params, all_Cs, dt, states_nb, nb_substeps, do_frame, frame_len, verbose = 1):
     '''
     each probability can be multiplied to get a likelihood of the model knowing
-    the parameters LocErr, D0 and F0 the diffusion coefficient and fraction of
+    the parameters LocErr, D0 the diff coefficient of state 0 and F0 fraction of
     state 0, D1 the D coef at state 1, p01 the probability of transition from
     state 0 to 1 and p10 the proba of transition from state 1 to 0.
     here sum the logs(likelihood) to avoid too big numbers
     '''
     LocErr, ds, Fs, TR_params = extract_params(params, dt, states_nb, nb_substeps)
-
+    
     Cum_P = 0
     for k in range(len(all_Cs)):
         Css = all_Cs[k]
@@ -419,90 +419,63 @@ def get_2DSPT_params(all_Cs, dt, nb_substeps = 1, states_nb = 2, do_frame = 1,fr
         if not (len(min_values) == 6 and len(max_values) == 6 and len(estimated_vals) == 6 and len(vary_params) == 6):
             raise ValueError('estimated_vals, min_values, max_values and vary_params should all containing 6 parameters')
         if steady_state:
-            print(estimated_vals)
-            param_kwargs = [{'name' : 'D0', 'value' : estimated_vals[1], 'min' : min_values[1], 'max' : max_values[1], 'vary' : vary_params[1]},
-                            {'name' : 'D1_minus_D0', 'value' : estimated_vals[2] - estimated_vals[1], 'min' : min_values[2]-min_values[1], 'max' : max_values[2], 'vary' : vary_params[2]},
-                            {'name' : 'D1', 'expr' : 'D0 + D1_minus_D0'},
-                            {'name' : 'LocErr', 'value' : estimated_vals[0], 'min' :  min_values[0],'max' :  max_values[0], 'vary' : vary_params[0]},
-                            {'name' : 'F0', 'value' : estimated_vals[3], 'min' :  min_values[3], 'max' :  max_values[3], 'vary' :  vary_params[3]},
-                            {'name' : 'p01', 'value' : estimated_vals[4], 'min' :  min_values[4], 'max' :  max_values[4], 'vary' :  vary_params[4]},
-                            {'name' : 'p10', 'expr' : 'p01/(1/F0-1)'}]
-        else :
-            param_kwargs = [{'name' : 'D0', 'value' : estimated_vals[1], 'min' : min_values[1], 'max' : max_values[1], 'vary' : vary_params[1]},
-                            {'name' : 'D1_minus_D0', 'value' : estimated_vals[2] - estimated_vals[1], 'min' : min_values[2]-min_values[1], 'max' : max_values[2], 'vary' : vary_params[2]},
-                            {'name' : 'D1', 'expr' : 'D0 + D1_minus_D0' },
-                            {'name' : 'LocErr', 'value' : estimated_vals[0], 'min' :  min_values[0],'max' :  max_values[0], 'vary' : vary_params[0]},
-                            {'name' : 'F0', 'value' : estimated_vals[3], 'min' :  min_values[3], 'max' :  max_values[3], 'vary' :  vary_params[3]},
-                            {'name' : 'p01', 'value' : estimated_vals[4], 'min' :  min_values[4], 'max' :  max_values[4], 'vary' :  vary_params[4]},
-                            {'name' : 'p10', 'value' : estimated_vals[5], 'min' :  min_values[5], 'max' :  max_values[5], 'vary' : vary_params[5]}]
+                print(estimated_vals)
+                param_kwargs = [{'name' : 'D0', 'value' : estimated_vals['D0'], 'min' : min_values['D0'], 'max' : max_values['D0'], 'vary' : vary_params['D0']},
+                                {'name' : 'D1_minus_D0', 'value' : estimated_vals['D1'] - estimated_vals['D0'], 'min' : min_values['D1']-min_values['D0'], 'max' : max_values['D1'], 'vary' : vary_params['D1']},
+                                {'name' : 'D1', 'expr' : 'D0 + D1_minus_D0'},
+                                {'name' : 'LocErr', 'value' : estimated_vals['LocErr'], 'min' :  min_values['LocErr'],'max' :  max_values['LocErr'], 'vary' : vary_params['LocErr']},
+                                {'name' : 'F0', 'value' : estimated_vals['F0'], 'min' :  min_values['F0'], 'max' :  max_values['F0'], 'vary' :  vary_params['F0']},
+                                {'name' : 'p01', 'value' : estimated_vals['p01'], 'min' :  min_values['p01'], 'max' :  max_values['p01'], 'vary' :  vary_params['p01']},
+                                {'name' : 'p10', 'expr' : 'p01/(1/F0-1)'}]
+            else :
+                param_kwargs = [{'name' : 'D0', 'value' : estimated_vals['D0'], 'min' : min_values['D0'], 'max' : max_values['D0'], 'vary' : vary_params['D0']},
+                                {'name' : 'D1_minus_D0', 'value' : estimated_vals['D1'] - estimated_vals['D0'], 'min' : min_values['D1']-min_values['D0'], 'max' : max_values['D1'], 'vary' : vary_params['D1']},
+                                {'name' : 'D1', 'expr' : 'D0 + D1_minus_D0' },
+                                {'name' : 'LocErr', 'value' : estimated_vals['LocErr'], 'min' :  min_values['LocErr'],'max' :  max_values['LocErr'], 'vary' : vary_params['LocErr']},
+                                {'name' : 'F0', 'value' : estimated_vals['F0'], 'min' :  min_values['F0'], 'max' :  max_values['F0'], 'vary' :  vary_params['F0']},
+                                {'name' : 'p01', 'value' : estimated_vals['p01'], 'min' :  min_values['p01'], 'max' :  max_values['p01'], 'vary' :  vary_params['p01']},
+                                {'name' : 'p10', 'value' : estimated_vals['p10'], 'min' :  min_values['p10'], 'max' :  max_values['p10'], 'vary' : vary_params['p10']}]
 
     elif states_nb == 3:
         # estimated_vals = [LocErr, D0, D1, D2, F0, F1, p01, p02, p10, p12, p20, p21]
         # e.g. vary_params = [True, False, True, True, True, True,True, True, True, True,True, True],estimated_vals = [0.023, 1e-12, 0.02, 0.1, 0.2, 0.1, 0.1,0.1,0.1,0.1,0.1,0.1],min_values = [0.007, 1e-12, 0.0001, 0.001, 0.001,0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001], max_values = [0.6,1,1,1,1,1,1,1,1,1,1,1]
         if not (len(min_values) == 12 and len(max_values) == 12 and len(estimated_vals) == 12 and len(vary_params) == 12):
             raise ValueError('estimated_vals, min_values, max_values and vary_params should all containing 12 parameters')
+
         if steady_state:
-            param_kwargs = [{'name' : 'LocErr', 'value' : estimated_vals[0], 'min' : min_values[0], 'max' : max_values[0] , 'vary' : vary_params[0]},
-                            {'name' : 'D0', 'value' : estimated_vals[1], 'min' : min_values[1], 'max' : 0.3, 'brute_step' : 0.04, 'vary' : vary_params[1]},
-                            {'name' : 'D1_minus_D0', 'value' : estimated_vals[2] - estimated_vals[1], 'min' : 0, 'max' : max_values[2], 'brute_step' : 0.04, 'vary' : vary_params[2]},
+            param_kwargs = [{'name' : 'LocErr', 'value' : estimated_vals['LocErr'], 'min' : min_values['LocErr'], 'max' : max_values['LocErr'] , 'vary' : vary_params['LocErr']},
+                            {'name' : 'D0', 'value' : estimated_vals['D0'], 'min' : min_values['D0'], 'max' : 0.3, 'brute_step' : 0.04, 'vary' : vary_params['D0']},
+                            {'name' : 'D1_minus_D0', 'value' : estimated_vals['D1'] - estimated_vals['D0'], 'min' : 0, 'max' : max_values['D1'], 'brute_step' : 0.04, 'vary' : vary_params['D1']},
                             {'name' : 'D1', 'expr' : 'D0+D1_minus_D0'},
-                            {'name' : 'D2_minus_D1', 'value' : estimated_vals[3] - estimated_vals[2], 'min' : 0, 'max' : max_values[3], 'vary' : vary_params[3]},
+                            {'name' : 'D2_minus_D1', 'value' : estimated_vals['D2'] - estimated_vals['D1'], 'min' : 0, 'max' : max_values['D2'], 'vary' : vary_params['D2']},
                             {'name' : 'D2', 'expr' : 'D1+D2_minus_D1'},
-                            {'name' : 'p01', 'value' : estimated_vals[6], 'min' : min_values[6], 'max' : max_values[6], 'vary' : vary_params[6]},
-                            {'name' : 'p02', 'value' : estimated_vals[7], 'min' : min_values[3], 'max' : max_values[7], 'vary' : vary_params[7]},
-                            {'name' : 'p10', 'value' : estimated_vals[8], 'min' : min_values[3], 'max' : max_values[8], 'vary' : vary_params[8]},
-                            {'name' : 'p12', 'value' : estimated_vals[9], 'min' : min_values[3], 'max' : max_values[9], 'vary' : vary_params[9]},
-                            {'name' : 'p20', 'value' : estimated_vals[10], 'min' : min_values[3], 'max' : max_values[10], 'vary' : vary_params[10]},
-                            {'name' : 'p21', 'value' : estimated_vals[11], 'min' : min_values[3], 'max' : max_values[11], 'vary' : vary_params[11]},
+                            {'name' : 'p01', 'value' : estimated_vals['p01'], 'min' : min_values['p01'], 'max' : max_values['p01'], 'vary' : vary_params['p01']},
+                            {'name' : 'p02', 'value' : estimated_vals['p02'], 'min' : min_values['p02'], 'max' : max_values['p02'], 'vary' : vary_params['p02']},
+                            {'name' : 'p10', 'value' : estimated_vals['p10'], 'min' : min_values['p10'], 'max' : max_values['p10'], 'vary' : vary_params['p10']},
+                            {'name' : 'p12', 'value' : estimated_vals['p12'], 'min' : min_values['p12'], 'max' : max_values['p12'], 'vary' : vary_params['p12']},
+                            {'name' : 'p20', 'value' : estimated_vals['p20'], 'min' : min_values['p20'], 'max' : max_values['p20'], 'vary' : vary_params['p20']},
+                            {'name' : 'p21', 'value' : estimated_vals['p21'], 'min' : min_values['p21'], 'max' : max_values['p21'], 'vary' : vary_params['p21']},
                             {'name' : 'F0', 'expr' : '(p10*(p21+p20)+p20*p12)/((p01)*(p12 + p21) + p02*(p10 + p12 + p21) + p01*p20 + p21*p10 + p20*(p10+p12))'},
                             {'name' : 'F1', 'expr' : '(F0*p01 + (1-F0)*p21)/(p10 + p12 + p21)'},
                             {'name' : 'F2', 'expr' : '1-F0-F1'}]
         else:
-
-            param_kwargs = [{'name' : 'LocErr', 'value' : estimated_vals[0], 'min' : min_values[0], 'max' : max_values[0] , 'vary' : vary_params[0]},
-                            {'name' : 'D0', 'value' : estimated_vals[1], 'min' : min_values[1], 'max' : 0.3, 'brute_step' : 0.04, 'vary' : vary_params[1]},
-                            {'name' : 'D1_minus_D0', 'value' : estimated_vals[2] - estimated_vals[1], 'min' : 0, 'max' : max_values[2], 'brute_step' : 0.04, 'vary' : vary_params[2]},
+            param_kwargs = [{'name' : 'LocErr', 'value' : estimated_vals['LocErr'], 'min' : min_values['LocErr'], 'max' : max_values['LocErr'] , 'vary' : vary_params['LocErr']},
+                            {'name' : 'D0', 'value' : estimated_vals['D0'], 'min' : min_values['D0'], 'max' : 0.3, 'brute_step' : 0.04, 'vary' : vary_params['D0']},
+                            {'name' : 'D1_minus_D0', 'value' : estimated_vals['D1'] - estimated_vals['D0'], 'min' : 0, 'max' : max_values['D1'], 'brute_step' : 0.04, 'vary' : vary_params['D1']},
                             {'name' : 'D1', 'expr' : 'D0+D1_minus_D0'},
-                            {'name' : 'D2_minus_D1', 'value' : estimated_vals[3] - estimated_vals[2], 'min' : 0, 'max' : max_values[3], 'vary' : vary_params[3]},
-                            {'name' : 'D2', 'expr' : 'D1+D2_minus_D1'},                            {'name' : 'p01', 'value' : estimated_vals[6], 'min' : min_values[6], 'max' : max_values[6], 'vary' : vary_params[6]},
-                            {'name' : 'p02', 'value' : estimated_vals[7], 'min' : min_values[3], 'max' : max_values[7], 'vary' : vary_params[7]},
-                            {'name' : 'p10', 'value' : estimated_vals[8], 'min' : min_values[3], 'max' : max_values[8], 'vary' : vary_params[8]},
-                            {'name' : 'p12', 'value' : estimated_vals[9], 'min' : min_values[3], 'max' : max_values[9], 'vary' : vary_params[9]},
-                            {'name' : 'p20', 'value' : estimated_vals[10], 'min' : min_values[3], 'max' : max_values[10], 'vary' : vary_params[10]},
-                            {'name' : 'p21', 'value' : estimated_vals[11], 'min' : min_values[3], 'max' : max_values[11], 'vary' : vary_params[11]},
-                            {'name' : 'F0', 'value' : estimated_vals[4], 'min' : min_values[4], 'max' : max_values[4], 'vary' : vary_params[4]},
-                            {'name' : 'F1_minus_F0', 'value' : (estimated_vals[5])/(1-estimated_vals[4]), 'min' : 0.01, 'max' : 0.99, 'vary' : vary_params[5]},
+                            {'name' : 'D2_minus_D1', 'value' : estimated_vals['D2'] - estimated_vals['D1'], 'min' : 0, 'max' : max_values['D2'], 'vary' : vary_params['D2']},
+                            {'name' : 'D2', 'expr' : 'D1+D2_minus_D1'},
+                            {'name' : 'p01', 'value' : estimated_vals['p01'], 'min' : min_values['p01'], 'max' : max_values['p01'], 'vary' : vary_params['p01']},
+                            {'name' : 'p02', 'value' : estimated_vals['p02'], 'min' : min_values['p02'], 'max' : max_values['p02'], 'vary' : vary_params['p02']},
+                            {'name' : 'p10', 'value' : estimated_vals['p10'], 'min' : min_values['p10'], 'max' : max_values['p10'], 'vary' : vary_params['p10']},
+                            {'name' : 'p12', 'value' : estimated_vals['p12'], 'min' : min_values['p12'], 'max' : max_values['p12'], 'vary' : vary_params['p12']},
+                            {'name' : 'p20', 'value' : estimated_vals['p20'], 'min' : min_values['p20'], 'max' : max_values['p20'], 'vary' : vary_params['p20']},
+                            {'name' : 'p21', 'value' : estimated_vals['p21'], 'min' : min_values['p21'], 'max' : max_values['p21'], 'vary' : vary_params['p21']},
+                            {'name' : 'F0', 'value' : estimated_vals['F0'], 'min' : min_values['F0'], 'max' : max_values['F0'], 'vary' : vary_params['F0']},
+                            {'name' : 'F1_minus_F0', 'value' : (estimated_vals['F1'])/(1-estimated_vals['F0']), 'min' : min_values['F1'], 'max' : max_values['F1'], 'vary' : vary_params['F1']},
                             {'name' : 'F1', 'expr' : 'F1_minus_F0*(1-F0)'},
                             {'name' : 'F2', 'expr' : '1-F0-F1'}]
-            
-            '''
-            param_kwargs = [{'name' : 'LocErr', 'value' : estimated_vals[0], 'min' : min_values[0], 'max' : max_values[0] , 'vary' : vary_params[0]},
-                            {'name' : 'D0', 'value' : estimated_vals[1], 'min' : min_values[1], 'max' : 0.3, 'brute_step' : 0.04, 'vary' : vary_params[1]},
-                            {'name' : 'D1_minus_D0', 'value' : estimated_vals[2] - estimated_vals[1], 'min' : 0, 'max' : max_values[2], 'brute_step' : 0.04, 'vary' : vary_params[2]},
-                            {'name' : 'D1', 'expr' : 'D0+D1_minus_D0'},
-                            {'name' : 'D2_minus_D1', 'value' : estimated_vals[3] - estimated_vals[2], 'min' : 0, 'max' : max_values[3], 'vary' : vary_params[3]},
-                            {'name' : 'D2', 'expr' : 'D1+D2_minus_D1'},                            {'name' : 'F0', 'value' : estimated_vals[4], 'min' : min_values[4], 'max' : max_values[4], 'vary' : vary_params[4]},
-                            {'name' : 'F1_minus_F0', 'value' : estimated_vals[5]/(1-estimated_vals[4]), 'min' : 0.01, 'max' : 0.99, 'vary' : vary_params[5]},
-                            {'name' : 'F1', 'expr' : 'F1_minus_F0*(1-F0)'},
-                            {'name' : 'F2', 'expr' : '1-F0-F1'},
-                            {'name' : 'p00', 'value' : 1-estimated_vals[6]-estimated_vals[7], 'min' : 0.01, 'max' :1, 'vary' : vary_params[6]},
-                            {'name' : 'p11', 'value' : 1-estimated_vals[8]-estimated_vals[9], 'min' : 0.01, 'max' : 1, 'vary' : vary_params[6]},
-                            {'name' : 'p22', 'value' : 1-estimated_vals[10]-estimated_vals[11], 'min' : 0.01, 'max' : 1, 'vary' : vary_params[6]},
-                            {'name' : 'p01', 'value' : estimated_vals[6], 'min' : min_values[6], 'max' : max_values[6], 'vary' : vary_params[6]},
-                            {'name' : 'p02', 'expr' : '1-p00-p01'},
-                            {'name' : 'p12', 'expr' : '(F2*(1-p22) - F0*p02)/F1'},
-                            {'name' : 'p10', 'expr' : '1-p12-p11'},
-                            {'name' : 'p21', 'expr' : '(F1*(1-p11) - F0*p01)/F2'},
-                            {'name' : 'p20', 'expr' : '1-p21-p22'}]
-            '''
-            '''
-            F0*p00 + F1*p10 + F2*p20 = F0
-            F0*p01 + F1*p11 + F2*p21 = F1
-            F0*p02 + F1*p12 + F2*p22 = F2
-            
-            p21 = (F1*(1-p11) - F0*p01)/F2
-            p12 = (F2*(1-p22) - F0*p02)/F1
-            '''
+
     else :
         raise ValueError("wrong number of states, must be either 2 or 3")
     
