@@ -2,7 +2,6 @@ from Tracking import get_2DSPT_params
 from Tracking import predict_Bs
 
 def auto_fitting_2states(all_Cs,dt, steady_state = True, estimated_vals = {'LocErr' : 0.025, 'D0' : 1e-20, 'D1' : 0.05, 'F0' : 0.45, 'p01' : 0.05, 'p10' : 0.05}, vary_params = {'LocErr' : True, 'D0' : False, 'D1' : True, 'F0' : True, 'p01' : True, 'p10' : True}):
-                estimated_vals = {'LocErr' : 0.025, 'D0' : 1e-20, 'D1' : 0.05, 'F0' : 0.45, 'p01' : 0.05, 'p10' : 0.05}
     
     model_fit = get_2DSPT_params(all_Cs, dt, nb_substeps = 1, states_nb = 2, do_frame = 1,frame_len = 4, verbose = 0, vary_params = [vary_params, estimated_vals = estimated_vals, steady_state = steady_state)
     
