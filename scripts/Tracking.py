@@ -427,7 +427,7 @@ def get_2DSPT_params(all_Cs, dt, nb_substeps = 1, states_nb = 2, do_frame = 1,fr
                                 {'name' : 'F0', 'value' : estimated_vals['F0'], 'min' :  min_values['F0'], 'max' :  max_values['F0'], 'vary' :  vary_params['F0']},
                                 {'name' : 'p01', 'value' : estimated_vals['p01'], 'min' :  min_values['p01'], 'max' :  max_values['p01'], 'vary' :  vary_params['p01']},
                                 {'name' : 'p10', 'expr' : 'p01/(1/F0-1)'}]
-            else :
+        else :
                 param_kwargs = [{'name' : 'D0', 'value' : estimated_vals['D0'], 'min' : min_values['D0'], 'max' : max_values['D0'], 'vary' : vary_params['D0']},
                                 {'name' : 'D1_minus_D0', 'value' : estimated_vals['D1'] - estimated_vals['D0'], 'min' : min_values['D1']-min_values['D0'], 'max' : max_values['D1'], 'vary' : vary_params['D1']},
                                 {'name' : 'D1', 'expr' : 'D0 + D1_minus_D0' },
