@@ -16,10 +16,8 @@ here = path.abspath(path.dirname(__file__))
 # Get the long description from the README file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
-
-with open(path.join(here, 'Tracking/version.py'), encoding='utf-8') as f:
-    v = f.read()
-__version__ = v[15:-2]
+    
+exec(open("extrack/version.py").read())
 
 print ("Version", __version__)
 setup(
