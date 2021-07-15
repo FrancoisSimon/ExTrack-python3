@@ -1,4 +1,3 @@
-import time
 import numpy as np
 
 '''
@@ -12,7 +11,6 @@ def asnumpy(x):
     return x
 import itertools
 from lmfit import minimize, Parameters
-from matplotlib import pyplot as plt
 
 '''
 Maximum likelihood to determine transition rates :
