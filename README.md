@@ -16,7 +16,7 @@ Optional: jupyter
 
 # Installation (from pip)
 
-`pip install extrack`
+`pip install -i https://test.pypi.org/simple/ ExTrack`
 
 # Installation (from this Gitlab) repository
 
