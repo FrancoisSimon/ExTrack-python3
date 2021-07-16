@@ -12,7 +12,7 @@ ExTrack has been designed and implemented by François Simon. The python impleme
 
 Optional: jupyter, cupy
 
-For GPU paralelization, cupy can be installed as described here : https://github.com/cupy/cupy. The cupy version will depend on your cuda version which itself must be compatible with your GPU driver and GPU. Usage of cupy requires a change in the extrack module : GPU_computing = False
+For GPU parallelization, cupy can be installed as described here : https://github.com/cupy/cupy. The cupy version will depend on your cuda version which itself must be compatible with your GPU driver and GPU. Usage of cupy requires a change in the extrack module : GPU_computing = False
 
 
 # Installation (from pip)
