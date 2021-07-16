@@ -9,6 +9,7 @@ ExTrack has been designed and implemented by François Simon. The python impleme
 
 - numpy
 - lmfit
+- xmltodict
 
 Optional: jupyter, cupy
 
