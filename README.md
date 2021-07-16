@@ -3,16 +3,17 @@ ExTrack
 
 This repository contains the necessary scripts to run the method ExTrack. ExTrack is a method to detemine Kinetics of tracks able to transition between different motion states. It can assess diffusion coefficients transition rates, localization error as well as annotating the probability for any track to be in each state for every time points.
 
-ExTrack has been designed and implemented by François Simon. The python implementation of ExTrack can profite from GPU parallelization using the cupy library. An additionnal version of ExTrack is available on Fiji via Trackmate thanks to Jean-Yves Tinevez. The fiji version can profite from CPU parallelization better performances.
+ExTrack has been designed and implemented by François Simon. The python implementation of ExTrack can profite from GPU parallelization using the cupy library. An additionnal version of ExTrack is available on Fiji via Trackmate thanks to Jean-Yves Tinevez https://sites.imagej.net/TrackMate-ExTrack/. The fiji version can profite from CPU parallelization better performances.
 
 # Dependencies
 
 - numpy
-- itertools
 - lmfit
-- cupy
 
-Optional: jupyter
+Optional: jupyter, cupy
+
+For GPU paralelization, cupy can be installed as described here : https://github.com/cupy/cupy. The cupy version will depend on your cuda version which itself must be compatible with your GPU driver and GPU. Usage of cupy requires a change in the extrack module : GPU_computing = False
+
 
 # Installation (from pip)
 
@@ -24,7 +25,7 @@ Optional: jupyter
 `pip install -r requirements.txt`
 
 Alternatively, you can install the dependencies manually by typing:
-`pip install numpy itertools lmfit cupy`
+`pip install numpy lmfit`
 
 Optional : `pip install jupyter`
 
@@ -33,7 +34,6 @@ Optional : `pip install jupyter`
 Simply run (as root): `python setup.py install`
 
 Check that it worked: `python -c "import extrack"`
-
 
 # Tutorial
 
@@ -54,7 +54,6 @@ The `writers` submodule contains some useful functions:
 
 # License
 This program is released under the GNU General Public License version 3 or upper (GPLv3+).
-
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
