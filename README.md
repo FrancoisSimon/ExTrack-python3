@@ -26,7 +26,7 @@ For GPU parallelization, cupy can be installed as described here : https://githu
 `pip install -r requirements.txt`
 
 Alternatively, you can install the dependencies manually by typing:
-`pip install numpy lmfit`
+`pip install numpy lmfit xmltodict`
 
 Optional : `pip install jupyter`
 
