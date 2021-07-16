@@ -1,14 +1,15 @@
 import numpy as np
 
-'''
-# if GPU computing :
-import cupy as cp
-from cupy import asnumpy
-'''
-# if CPU computing :
-import numpy as cp
-def asnumpy(x):
-    return x
+GPU_computing = False
+
+if GPU_computing :
+    import cupy as cp
+    from cupy import asnumpy
+else :
+    import numpy as cp
+    def asnumpy(x):
+        return x
+
 import itertools
 from lmfit import minimize, Parameters
 
