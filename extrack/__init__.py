@@ -1,4 +1,4 @@
-from extrack import *
-from version import __version__
-
-import auto_fitting
+from extrack import extrack
+from extrack.version import __version__
+print(__version__)
+from extrack import auto_fitting
