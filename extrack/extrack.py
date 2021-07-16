@@ -399,8 +399,21 @@ def cum_Proba_Cs(params, all_Cs, dt, states_nb, nb_substeps, do_frame, frame_len
         out = 1E100
     return out
 
-def get_2DSPT_params(all_Cs, dt, nb_substeps = 1, states_nb = 2, do_frame = 1,frame_len = 10, verbose = 1, method = 'powell', vary_params = [True, False, True, True, True, True], estimated_vals = [0.025, 1e-12, 0.05, 0.45, 0.05, 0.05], steady_state = True, min_values = [0.007, 1e-12, 0.0001, 0.001, 0.01, 0.01], max_values = [0.6, 1, 1,0.999, 1, 1]):
-    '''
+def get_2DSPT_params(all_Cs,
+                     dt,
+                     nb_substeps = 1,
+                     states_nb = 2,
+                     do_frame = 1,
+                     frame_len = 10,
+                     verbose = 1,
+                     method = 'powell',
+                     steady_state = True,
+                     vary_params = {'LocErr' : True, 'D0' : False, 'D1' : True, 'F0' : True, 'p01' : True, 'p10' : True},
+                     estimated_vals =  {'LocErr' : 0.025, 'D0' : 1e-20, 'D1' : 0.05, 'F0' : 0.45, 'p01' : 0.05, 'p01' : 0.05},
+                     min_values = {'LocErr' : 0.007, 'D0' : 1e-12, 'D1' : 0.00001, 'F0' : 0.001, 'p01' : 0.01, 'p01' : 0.01},
+                     max_values = {'LocErr' : 0.6, 'D0' : 1, 'D1' : 10, 'F0' : 0.001, 'p01' : 0.01, 'p01' : 0.01}):
+
+'''
     all_Cs : list of 3D arrays of tracks, dim 0 = track ID, dim 1 = sequence of positions, dim 2 = x, y, (z) axes
     estimated_vals : list of parameters [LocError, D0, D1, F0, p01, p10] if 2 states,
     [LocError, D0, D1, F0, F1, p01, p02, p10, p12, p20, p21] if 3 states.
@@ -413,6 +426,12 @@ def get_2DSPT_params(all_Cs, dt, nb_substeps = 1, states_nb = 2, do_frame = 1,fr
     vary_params = list of bool stating if the method varies each parameters in the same order than in estimated_vals
     steady_state : bool stating if assuming stady state or not (constrains rates and Fractions to 2 free params for a 2 states model or 6 for a 3 states model)
     min_values, max_values : minimum values and maximum values of each parameters in the order of estimated_vals
+    
+    in case of 3 states models vary_params, estimated_vals, min_values and max_values can be replaced :
+    vary_params = {'LocErr' : True, 'D0' : False, 'D1' :  True, 'D2' : True, 'F0' : True, 'F1' : True, 'p01' : True, 'p02' : True, 'p10' : True,'p12' :  True,'p20' :  True, 'p21' : True},
+    estimated_vals = {'LocErr' : 0.023, 'D0' : 1e-20, 'D1' : 0.02, 'D2' :  0.1, 'F0' : 0.33,  'F1' : 0.33, 'p01' : 0.1, 'p02' : 0.1, 'p10' :0.1, 'p12' : 0.1, 'p20' :0.1, 'p21' :0.1},
+    min_values = {'LocErr' : 0.007, 'D0' : 1e-20, 'D1' : 0.0000001, 'D2' :  0.000001, 'F0' : 0.001,  'F1' : 0.001, 'p01' : 0.001, 'p02' : 0.001, 'p10' :0.001, 'p12' : 0.001, 'p20' :0.001, 'p21' :0.001},
+    max_values = {'LocErr' : 0.6, 'D0' : 1e-20, 'D1' : 1, 'D2' :  10, 'F0' : 0.999,  'F1' : 0.999, 'p01' : 1, 'p02' : 1, 'p10' : 1, 'p12' : 1, 'p20' : 1, 'p21' : 1}
     '''
     if  states_nb == 2:
         if not (len(min_values) == 6 and len(max_values) == 6 and len(estimated_vals) == 6 and len(vary_params) == 6):
