@@ -1,16 +1,16 @@
-from Tracking import get_2DSPT_params
-from Tracking import predict_Bs
+from extrack.extrack import get_2DSPT_params
+from extrack.extrack import predict_Bs
+import numpy as np
 
 def auto_fitting_2states(all_Cs,dt, steady_state = True, estimated_vals = {'LocErr' : 0.025, 'D0' : 1e-20, 'D1' : 0.05, 'F0' : 0.45, 'p01' : 0.05, 'p10' : 0.05}, vary_params = {'LocErr' : True, 'D0' : False, 'D1' : True, 'F0' : True, 'p01' : True, 'p10' : True}):
     
-    model_fit = get_2DSPT_params(all_Cs, dt, nb_substeps = 1, states_nb = 2, do_frame = 1,frame_len = 4, verbose = 0, vary_params = [vary_params, estimated_vals = estimated_vals, steady_state = steady_state)
+    model_fit = get_2DSPT_params(all_Cs, dt, nb_substeps = 1, states_nb = 2, do_frame = 1,frame_len = 4, verbose = 0, vary_params = vary_params, estimated_vals = estimated_vals, steady_state = steady_state)
     
     estimated_vals = [model_fit.params['LocErr'].value, model_fit.params['D0'].value, model_fit.params['D1'].value, model_fit.params['F0'].value, model_fit.params['p01'].value, model_fit.params['p10'].value]
     tr_freq = estimated_vals[3]*estimated_vals[4] + (1-estimated_vals[3])*estimated_vals[5]
     DLR = (2*dt*estimated_vals[2])**0.5/estimated_vals[0]
     
     frame_lens = [6,6,5]
-    nbs_substeps = [1,2,3]
     nb_substeps = 1
 
     if DLR < 1.5:
@@ -36,7 +36,8 @@ def auto_fitting_2states(all_Cs,dt, steady_state = True, estimated_vals = {'LocE
     res_val = 0
     for kk in range(10):
         if keep_running:
-            model_fit = get_2DSPT_params(all_Css, dt, nb_substeps = nb_substeps, states_nb = 2, do_frame = 1,frame_len = frame_len, verbose = 0, vary_params = [True, False, True, True, True, True], estimated_vals = [model_fit.params['LocErr'], model_fit.params['D0'], model_fit.params['D1'], model_fit.params['F0'], model_fit.params['p01'], model_fit.params['p10']], steady_state = True)
+            estimated_vals = { 'LocErr' : model_fit.params['LocErr'], 'D0' : model_fit.params['D0'], 'D1' : model_fit.params['D1'], 'F0' : model_fit.params['F0'], 'p01' : model_fit.params['p01'], 'p10' : model_fit.params['p10']}
+            model_fit = get_2DSPT_params(all_Cs, dt, nb_substeps = nb_substeps, states_nb = 2, do_frame = 1,frame_len = frame_len, verbose = 0, vary_params = [True, False, True, True, True, True], estimated_vals = estimated_vals, steady_state = True)
             if res_val - 0.1 > model_fit.residual:
                 res_val = model_fit.residual
             else:
@@ -45,7 +46,7 @@ def auto_fitting_2states(all_Cs,dt, steady_state = True, estimated_vals = {'LocE
         q = [param + ' = ' + str(np.round(model_fit.params[param].value, 4)) for param in model_fit.params]
         print(model_fit.residual[0], q)
         
-    preds = predict_Bs(all_Cs, dt, model_fit.params, states_nb, frame_len = 12)
+    preds = predict_Bs(all_Cs, dt, model_fit.params, 2, frame_len = 12)
     return model_fit, preds
   
 def auto_fitting_3states(all_Cs,dt, steady_state = True, vary_params = { 'LocErr' : True, 'D0' : False, 'D1' :  True, 'D2' : True, 'F0' : True, 'F1' : True, 'p01' : True, 'p02' : True, 'p10' : True,'p12' :  True,'p20' :  True, 'p21' : True},
@@ -65,7 +66,8 @@ def auto_fitting_3states(all_Cs,dt, steady_state = True, vary_params = { 'LocErr
     res_val = 0
     for kk in range(10):
         if keep_running:
-            model_fit = get_2DSPT_params(all_Css, dt, nb_substeps = 1, states_nb = 2, do_frame = 1,frame_len = frame_len, verbose = 0, vary_params = vary_params, estimated_vals = [model_fit.params['LocErr'], model_fit.params['D0'], model_fit.params['D1'], model_fit.params['F0'], model_fit.params['p01'], model_fit.params['p10']], steady_state = True)
+            estimated_vals = { 'LocErr' : model_fit.params['LocErr'], 'D0' : model_fit.params['D0'], 'D1' : model_fit.params['D1'], 'D2' :  model_fit.params['D2'], 'F0' : model_fit.params['F0'],  'F1' : model_fit.params['F1'], 'p01' : model_fit.params['p01'], 'p02' : model_fit.params['p02'], 'p10' :model_fit.params['p10'], 'p12' :model_fit.params['p12'], 'p20' :model_fit.params['p20'], 'p21' :model_fit.params['p21']}
+            model_fit = get_2DSPT_params(all_Cs, dt, nb_substeps = 1, states_nb = 2, do_frame = 1,frame_len = 5, verbose = 0, vary_params = vary_params, estimated_vals = estimated_vals, steady_state = True)
             if res_val - 0.1 > model_fit.residual:
                 res_val = model_fit.residual
             else:
@@ -74,6 +76,6 @@ def auto_fitting_3states(all_Cs,dt, steady_state = True, vary_params = { 'LocErr
         q = [param + ' = ' + str(np.round(model_fit.params[param].value, 4)) for param in model_fit.params]
         print(model_fit.residual[0], q)
         
-    preds = predict_Bs(all_Cs, dt, model_fit.params, states_nb, frame_len = 12)
+    preds = predict_Bs(all_Cs, dt, model_fit.params, 3, frame_len = 7)
     return model_fit, preds
   
