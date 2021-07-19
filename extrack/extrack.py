@@ -8,7 +8,7 @@ if GPU_computing :
 else :
     import numpy as cp
     def asnumpy(x):
-        return x
+        return np.array(x)
 
 import itertools
 from lmfit import minimize, Parameters
@@ -158,7 +158,7 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TR_params, nb_substeps=1, do_fram
                     
                     for state in range(nb_states):
                         B_is_state = cur_Bs[:,:,-1] == state
-                        preds[:,nb_locs-current_step+frame_len-2, state] = np.sum(B_is_state*P,axis = 1)/np.sum(P,axis = 1)
+                        preds[:,nb_locs-current_step+frame_len-2, state] = asnumpy(np.sum(B_is_state*P,axis = 1)/np.sum(P,axis = 1))
                 cur_Bs.shape
                 cur_Bs = cur_Bs[:,:cur_nb_Bs//nb_states, :-1]
                 Km, Ks, LP = fuse_tracks(Km, Ks, LP, cur_nb_Bs, nb_states)
@@ -184,7 +184,7 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TR_params, nb_substeps=1, do_fram
     if do_preds :
         for state in range(nb_states):
             B_is_state = cur_Bs[:,:] == state
-            preds[:,0:frame_len, state] = np.sum(B_is_state*P[:,:,None],axis = 1)/np.sum(P[:,:,None],axis = 1)
+            preds[:,0:frame_len, state] = asnumpy(np.sum(B_is_state*P[:,:,None],axis = 1)/np.sum(P[:,:,None],axis = 1))
     return LP, cur_Bs, preds
 
 def fuse_tracks(Km, Ks, LP, cur_nb_Bs, nb_states = 2):
@@ -276,19 +276,31 @@ def predict_Bs(all_Cs, dt, params, states_nb, frame_len):
     inputs the observed localizations and parameters and determines the proba
     of each localization to be in a given state.
     '''
+    if type(all_Cs) == type({}):
+        all_Cs_list = []
+        for l in all_Cs:
+            all_Cs_list.append(all_Cs[l])
+        all_Cs = all_Cs_list
+    
     nb_substeps=1 # substeps should not impact the step labelling
     LocErr, ds, Fs, TR_params = extract_params(params, dt, states_nb, nb_substeps)
     all_pred_Bs = []
     for k in range(len(all_Cs)):
         LP_Cs, trunkated_Bs, pred_Bs = P_Cs_inter_bound_stats(all_Cs[k], LocErr, ds, Fs, TR_params, nb_substeps = 1, do_frame = 1,frame_len = frame_len, do_preds = 1)
         all_pred_Bs.append(pred_Bs)
-    return all_pred_Bs
+        
+    all_pred_Bs_dict = {}
+    for pred_Bs in all_pred_Bs:
+        all_pred_Bs_dict[str(pred_Bs.shape[1])] = pred_Bs
 
+    return all_pred_Bs_dict
+
+'''
 def acc_Bs(all_Cs, dt, params, True_Bs, states_nb, frame_len):
-    '''
+    """
     inputs the observed localizations, parameters and true palbels to determines
     accuracy of the method to label the states for each localization
-    '''
+    """
     nb_substeps=1 # substeps should not impact the step labelling
     LocErr, ds, Fs, TR_params = extract_params(params, dt, states_nb, nb_substeps)
     P_Cs, trunkated_Bs, pred_Bs = P_Cs_inter_bound_stats(all_Cs, LocErr, ds, Fs, TR_params, nb_substeps = 1, do_frame = 1,frame_len = frame_len, do_preds = 1)
@@ -298,6 +310,7 @@ def acc_Bs(all_Cs, dt, params, True_Bs, states_nb, frame_len):
     accuracy = asnumpy(accuracy)
     print('accuracy :', accuracy)
     return accuracy
+'''
 
 def extract_params(params, dt, states_nb, nb_substeps):
     '''
@@ -433,6 +446,12 @@ def get_2DSPT_params(all_Cs,
     min_values = {'LocErr' : 0.007, 'D0' : 1e-20, 'D1' : 0.0000001, 'D2' :  0.000001, 'F0' : 0.001,  'F1' : 0.001, 'p01' : 0.001, 'p02' : 0.001, 'p10' :0.001, 'p12' : 0.001, 'p20' :0.001, 'p21' :0.001},
     max_values = {'LocErr' : 0.6, 'D0' : 1e-20, 'D1' : 1, 'D2' :  10, 'F0' : 0.999,  'F1' : 0.999, 'p01' : 1, 'p02' : 1, 'p10' : 1, 'p12' : 1, 'p20' : 1, 'p21' : 1}
     '''
+    if str(all_Cs.__class__) == "<class 'dict'>":
+        all_Cs_list = []
+        for l in all_Cs:
+            all_Cs_list.append(all_Cs[l])
+        all_Cs = all_Cs_list
+
     if  states_nb == 2:
         if not (len(min_values) == 6 and len(max_values) == 6 and len(estimated_vals) == 6 and len(vary_params) == 6):
             raise ValueError('estimated_vals, min_values, max_values and vary_params should all containing 6 parameters')
