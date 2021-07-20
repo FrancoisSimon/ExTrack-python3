@@ -426,7 +426,7 @@ def get_2DSPT_params(all_Cs,
                      min_values = {'LocErr' : 0.007, 'D0' : 1e-12, 'D1' : 0.00001, 'F0' : 0.001, 'p01' : 0.01, 'p01' : 0.01},
                      max_values = {'LocErr' : 0.6, 'D0' : 1, 'D1' : 10, 'F0' : 0.001, 'p01' : 0.01, 'p01' : 0.01}):
 
-'''
+    '''
     all_Cs : list of 3D arrays of tracks, dim 0 = track ID, dim 1 = sequence of positions, dim 2 = x, y, (z) axes
     estimated_vals : list of parameters [LocError, D0, D1, F0, p01, p10] if 2 states,
     [LocError, D0, D1, F0, F1, p01, p02, p10, p12, p20, p21] if 3 states.
