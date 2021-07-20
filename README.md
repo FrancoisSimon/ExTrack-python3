@@ -1,7 +1,7 @@
 ExTrack
 -------
 
-This repository contains the necessary scripts to run the method ExTrack. ExTrack is a method to detemine Kinetics of tracks able to transition between different motion states. It can assess diffusion coefficients transition rates, localization error as well as annotating the probability for any track to be in each state for every time points.
+This repository contains the necessary scripts to run the method ExTrack. ExTrack is a method to detemine kinetics of particles able to transition between different motion states. It can assess diffusion coefficients, transition rates, localization error as well as annotating the probability for any track to be in each state for every time points.
 
 ExTrack has been designed and implemented by François Simon. The python implementation of ExTrack can profite from GPU parallelization using the cupy library. An additionnal version of ExTrack is available on Fiji via Trackmate thanks to Jean-Yves Tinevez https://sites.imagej.net/TrackMate-ExTrack/. The fiji version can profite from CPU parallelization better performances.
 
