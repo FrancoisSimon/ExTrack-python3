@@ -47,8 +47,8 @@ def auto_fitting_2states(all_Cs,
             else:
                 keep_running = 0
         
-        q = [param + ' = ' + str(np.round(model_fit.params[param].value, 4)) for param in model_fit.params]
-        print(model_fit.residual[0], q)
+            q = [param + ' = ' + str(np.round(model_fit.params[param].value, 4)) for param in model_fit.params]
+            print(model_fit.residual[0], q)
         
     preds = predict_Bs(all_Cs, dt, model_fit.params, 2, frame_len = 12)
     return model_fit, preds
