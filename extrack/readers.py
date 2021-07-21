@@ -1,6 +1,7 @@
 import xmltodict
 from glob import glob
 import numpy as np
+import pandas as pd
 
 def read_trackmate_xml(path, lengths=[6,7,8,9,10,11,12,13,14,15], dist_th = 0.3, start_frame = 0):
     """
@@ -59,8 +60,10 @@ def read_trackmate_xml(path, lengths=[6,7,8,9,10,11,12,13,14,15], dist_th = 0.3,
     '''
     return traces, frames, nb_peaks
   
+'''
 def read_matlab_table():
-  
+    
+'''
 
 def read_CSV_table(path, # path of the csv file to read
                    lengths=[6,7,8,9,10,11,12,13,14,15], 
@@ -157,16 +160,4 @@ def extrack_to_pandas(tracks, frames, opt_metrics, pred_Bs):
     df = pd.DataFrame(data = all_data, index = np.arange(len(all_data)), columns = colnames)
     
     return df
-
-
-
-
-
-
-
-
-
-
-
-
 
