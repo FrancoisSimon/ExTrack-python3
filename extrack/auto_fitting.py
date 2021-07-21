@@ -38,7 +38,7 @@ def auto_fitting_2states(all_Cs,
     
     keep_running = 1
     res_val = 0
-    for kk in range(10):
+    for kk in range(40):
         if keep_running:
             estimated_vals = { 'LocErr' : model_fit.params['LocErr'], 'D0' : model_fit.params['D0'], 'D1' : model_fit.params['D1'], 'F0' : model_fit.params['F0'], 'p01' : model_fit.params['p01'], 'p10' : model_fit.params['p10']}
             model_fit = get_2DSPT_params(all_Cs, dt, nb_substeps = nb_substeps, states_nb = 2, do_frame = 1,frame_len = frame_len, verbose = 0, vary_params = vary_params, estimated_vals = estimated_vals, steady_state = True)
@@ -79,7 +79,7 @@ def auto_fitting_3states(all_Cs,dt, steady_state = True, vary_params = { 'LocErr
     
     keep_running = 1
     res_val = 0
-    for kk in range(10):
+    for kk in range(40):
         if keep_running:
             estimated_vals = { 'LocErr' : model_fit.params['LocErr'], 'D0' : model_fit.params['D0'], 'D1' : model_fit.params['D1'], 'D2' :  model_fit.params['D2'], 'F0' : model_fit.params['F0'],  'F1' : model_fit.params['F1'], 'p01' : model_fit.params['p01'], 'p02' : model_fit.params['p02'], 'p10' :model_fit.params['p10'], 'p12' :model_fit.params['p12'], 'p20' :model_fit.params['p20'], 'p21' :model_fit.params['p21']}
             model_fit = get_2DSPT_params(all_Cs,
