@@ -424,7 +424,7 @@ def get_2DSPT_params(all_Cs,
                      vary_params = {'LocErr' : True, 'D0' : False, 'D1' : True, 'F0' : True, 'p01' : True, 'p10' : True},
                      estimated_vals =  {'LocErr' : 0.025, 'D0' : 1e-20, 'D1' : 0.05, 'F0' : 0.45, 'p01' : 0.05, 'p10' : 0.05},
                      min_values = {'LocErr' : 0.007, 'D0' : 1e-12, 'D1' : 0.00001, 'F0' : 0.001, 'p01' : 0.01, 'p10' : 0.01},
-                     max_values = {'LocErr' : 0.6, 'D0' : 1, 'D1' : 10, 'F0' : 0.001, 'p01' : 0.01, 'p10' : 0.01}):
+                     max_values = {'LocErr' : 0.6, 'D0' : 1, 'D1' : 10, 'F0' : 0.999, 'p01' : 1., 'p10' : 1.}):
 
     '''
     all_Cs : list of 3D arrays of tracks, dim 0 = track ID, dim 1 = sequence of positions, dim 2 = x, y, (z) axes
@@ -474,8 +474,13 @@ def get_2DSPT_params(all_Cs,
                                 {'name' : 'p10', 'value' : estimated_vals['p10'], 'min' :  min_values['p10'], 'max' :  max_values['p10'], 'vary' : vary_params['p10']}]
 
     elif states_nb == 3:
-        # estimated_vals = [LocErr, D0, D1, D2, F0, F1, p01, p02, p10, p12, p20, p21]
-        # e.g. vary_params = [True, False, True, True, True, True,True, True, True, True,True, True],estimated_vals = [0.023, 1e-12, 0.02, 0.1, 0.2, 0.1, 0.1,0.1,0.1,0.1,0.1,0.1],min_values = [0.007, 1e-12, 0.0001, 0.001, 0.001,0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001], max_values = [0.6,1,1,1,1,1,1,1,1,1,1,1]
+        '''
+        e.g. :
+        vary_params = { 'LocErr' : True, 'D0' : False, 'D1' :  True, 'D2' : True, 'F0' : True, 'F1' : True, 'p01' : True, 'p02' : True, 'p10' : True,'p12' :  True,'p20' :  True, 'p21' : True}
+        estimated_vals = { 'LocErr' : 0.023, 'D0' : 1e-20, 'D1' : 0.02, 'D2' :  0.1, 'F0' : 0.33,  'F1' : 0.33, 'p01' : 0.1, 'p02' : 0.1, 'p10' :0.1, 'p12' : 0.1, 'p20' :0.1, 'p21' :0.1}
+        min_values = { 'LocErr' : 0.007, 'D0' : 1e-20, 'D1' : 0.0000001, 'D2' :  0.000001, 'F0' : 0.001,  'F1' : 0.001, 'p01' : 0.001, 'p02' : 0.001, 'p10' :0.001, 'p12' : 0.001, 'p20' :0.001, 'p21' :0.001}
+        max_values = { 'LocErr' : 0.6, 'D0' : 1e-20, 'D1' : 1, 'D2' :  10, 'F0' : 0.999,  'F1' : 0.999, 'p01' : 1, 'p02' : 1, 'p10' : 1, 'p12' : 1, 'p20' : 1, 'p21' : 1})
+        '''
         if not (len(min_values) == 12 and len(max_values) == 12 and len(estimated_vals) == 12 and len(vary_params) == 12):
             raise ValueError('estimated_vals, min_values, max_values and vary_params should all containing 12 parameters')
 
