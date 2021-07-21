@@ -391,7 +391,7 @@ def cum_Proba_Cs(params, all_Cs, dt, states_nb, nb_substeps, do_frame, frame_len
     for k in range(len(all_Cs)):
         Css = all_Cs[k]
         nb_max = 700
-        for n in range(int(np.floor(len(Css)/nb_max))):
+        for n in range(int(np.ceil(len(Css)/nb_max))):
             Csss = Css[n*nb_max:(n+1)*nb_max]
             LP = Proba_Cs(Csss, LocErr, ds, Fs, TR_params, nb_substeps, do_frame, frame_len)
             #plt.clf()
