@@ -125,39 +125,68 @@ def read_CSV_table(path, # path of the csv file to read
         print('problem with {path}')
         raise e    
     return tracks, quality, frames, nb_peaks
-
+tracks = all_Css
+pred_Bs = preds
+frames = None
+opt_metrics = {}
 
 def extrack_to_pandas(tracks, frames, opt_metrics, pred_Bs):
     '''
     turn outputs form ExTrack to a unique pandas DataFrame
     '''
+    if frames is None:
+        frames = {}
+        for l in tracks:
+            frames[l] = np.repeat(np.array([np.arange(int(l))]), len(tracks[l]), axis = 0)
+    
     track_list = []
     frames_list = []
+    track_ID_list = []
     opt_metrics_list = []
     for metric in opt_metrics:
         opt_metrics_list.append([])
 
+    cur_nb_track = 0
     pred_Bs_list = []
     for l in tracks:
         track_list = track_list + list(tracks[l].reshape(tracks[l].shape[0] * tracks[l].shape[1], 2))
         frames_list = frames_list + list(frames[l].reshape(frames[l].shape[0] * frames[l].shape[1], 1))
+        track_ID_list = track_ID_list + list(np.repeat(np.arange(cur_nb_track,cur_nb_track+tracks[l].shape[0]),tracks[l].shape[1]))
+        cur_nb_track += tracks[l].shape[0]
+        
         for j, metric in enumerate(opt_metrics):
             opt_metrics_list[j] = opt_metrics_list[j] + list(opt_metrics[metric][l].reshape(opt_metrics[metric][l].shape[0] * opt_metrics[metric][l].shape[1], 1))
         
         n = pred_Bs[l].shape[2]
         pred_Bs_list = pred_Bs_list + list(pred_Bs[l].reshape(pred_Bs[l].shape[0] * pred_Bs[l].shape[1], n))
-
-    all_data = np.concatenate((np.array(track_list), np.array(frames_list), np.array(pred_Bs_list)), axis = 1)    
+    
+    all_data = np.concatenate((np.array(track_list), np.array(frames_list), np.array(track_ID_list)[:,None], np.array(pred_Bs_list)), axis = 1)    
     for opt_metric in opt_metrics_list:
         all_data = np.concatenate((all_data, opt_metric), axis = 1)
 
-    colnames = ['X', 'Y', 'frame']
+    colnames = ['X', 'Y', 'frame', 'track_ID']
     for i in range(np.array(pred_Bs_list).shape[1]):
         colnames = colnames + ['pred_' + str(i)]
     for metric in opt_metrics:
         colnames = colnames + [metric]
-        
-    df = pd.DataFrame(data = all_data, index = np.arange(len(all_data)), columns = colnames)
     
+    df = pd.DataFrame(data = all_data, index = np.arange(len(all_data)), columns = colnames)
+    df['frame'] = df['frame'].astype(int)
+    df['track_ID'] = df['track_ID'].astype(int)
+
     return df
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
