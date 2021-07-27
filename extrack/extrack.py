@@ -24,7 +24,7 @@ Next, we integrate reccursively over the possible real positions to find the pro
 of the track knowing the consecutive states. This recurrance can be performed as the
 integral of the product of normal laws is a constant time a normal law.
 In the end of the reccurance process we have a constant time normal law of which 
-all the terms are known and then a value of the probability. 
+all the terms are known and then a value of the probability.
 We finally use the conditional probability principle over the possible set of states
 to compute the probability of having the tracks. 
 '''
@@ -85,11 +85,16 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TR_params, nb_substeps=1, do_fram
     else :
         preds = []
     
+    if do_frame == 0:
+        frame_len = 100
+    
+    all_Bs = get_all_Bs(np.min([(nb_locs-1)*nb_substeps+1, frame_len + nb_substeps - 1]), nb_states)[None]
+    
     TrMat = cp.array(TR_params[1]) # transition matrix of the markovian process
     current_step = 1
     
-    cur_Bs = get_all_Bs(nb_substeps + 1, nb_states) # get initial sequences of states
-    cur_Bs = cur_Bs[None,:,:] # include dim for different tracks
+    #cur_Bs = get_all_Bs(nb_substeps + 1, nb_states)[None] # get initial sequences of states
+    cur_Bs = all_Bs[:,:nb_states**(nb_substeps + 1),:nb_substeps + 1]
     
     cur_states = cur_Bs[:,:,0:nb_substeps+1].astype(int) #states of interest for the current displacement
     cur_nb_Bs = cur_Bs.shape[1]
@@ -117,7 +122,9 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TR_params, nb_substeps=1, do_fram
     
     while current_step <= nb_locs-1:
         # update cur_Bs to describe the states at the next step :
-        cur_Bs = get_all_Bs(current_step*nb_substeps+1 - removed_steps, nb_states)[None]
+        #cur_Bs = get_all_Bs(current_step*nb_substeps+1 - removed_steps, nb_states)[None]
+        cur_Bs = all_Bs[:,:nb_states**(current_step*nb_substeps+1 - removed_steps),:current_step*nb_substeps+1 - removed_steps]
+        
         cur_states = cur_Bs[:,:,0:nb_substeps+1].astype(int)
         # compute the vector of diffusion stds knowing the states at the current step
         cur_ds = ds[cur_states]
@@ -231,16 +238,13 @@ def get_all_Bs(nb_Cs, nb_states):
     '''
     produces a matrix of the possible sequences of states
     '''
-    all_Bs = []
-    states_str = '012'[:nb_states]
-    for a in itertools.product(states_str, repeat=nb_Cs):
-        B = list(a)
-        B.reverse()
-        # all_Bs is designed to be red from the last state to the first one
-        # so we just have to 'repeat' the current matrix at each step for the next one 
-        all_Bs.append(B)
-    all_Bs = np.array(all_Bs).astype(float)
-    all_Bs = cp.array(all_Bs)
+    Bs_ID = np.arange(nb_states**nb_Cs)
+    all_Bs = np.zeros((nb_states**nb_Cs, nb_Cs), int)
+    
+    for k in range(all_Bs.shape[1]):
+        cur_row = np.mod(Bs_ID,nb_states**(k+1))
+        Bs_ID = (Bs_ID - cur_row)
+        all_Bs[:,k] = cur_row//nb_states**k
     return all_Bs
 
 def get_Ts_from_Bs(all_Bs, TrMat):
