@@ -295,3 +295,26 @@ def save_gifs(Cs, all_pos_means, all_pos_stds, all_pos_weights, all_pos_Bs, gif_
             plt.close()
         
         imageio.mimsave(gif_pathnames + str(ID)+'.gif', all_images,fps=fps)
+
+        
+               
+def do_gifs_from_params(all_Cs, params, dt, gif_pathnames = './tracks', frame_len = 9, states_nb = 2, nb_pix = 200, fps = 1):
+    for Cs in all_Cs:
+        LocErr, ds, Fs, TR_params = extract_params(params, dt, states_nb, nb_substeps = 1)
+        all_pos_means, all_pos_stds, all_pos_weights, all_pos_Bs = get_pos_PDF(Cs, LocErr, ds, Fs, TR_params, frame_len = frame_len)
+        save_gifs(Cs, all_pos_means, all_pos_stds, all_pos_weights, all_pos_Bs, gif_pathnames = gif_pathnames + '_' + str(len(Cs[0])) + '_pos', lim = None, nb_pix = nb_pix, fps=fps)    
+
+def get_refined_pos_from_params(all_Cs, params, dt, gif_pathnames = './tracks', frame_len = 9, states_nb = 2):
+    all_best_mus = []
+    all_best_sigs = []
+    all_best_Bs = []
+    for Cs in all_Cs:
+        LocErr, ds, Fs, TR_params = extract_params(params, dt, states_nb, nb_substeps = 1)
+        all_pos_means, all_pos_stds, all_pos_weights, all_pos_Bs = get_pos_PDF(Cs, LocErr, ds, Fs, TR_params, frame_len = frame_len)
+        best_mus, best_sigs, best_Bs = get_best_estimates(all_pos_weights, all_pos_Bs, all_pos_means, all_pos_stds)
+        all_best_mus.append(best_mus)
+        all_best_sigs.append(best_sigs)
+        all_best_Bs.append(best_Bs)
+    return all_best_mus, all_best_sigs, all_best_Bs
+    
+   
