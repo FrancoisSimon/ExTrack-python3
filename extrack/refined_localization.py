@@ -10,11 +10,14 @@ else:
     import numpy as cp
     def asnumpy(x):
         return x
-
-from matplotlib import pyplot as plt
+try:
+    from matplotlib import pyplot as plt
+    import imageio
+exept:
+    pass
 from extrack.extrack import gaussian, log_integrale_dif, first_log_integrale_dif, prod_2GaussPDF, prod_3GaussPDF, ds_froms_states, fuse_tracks, get_all_Bs, get_Ts_from_Bs
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-import imageio
+
 
 def get_LC_Km_Ks(Cs, LocErr, ds, Fs, TR_params, nb_substeps=1, frame_len = 4):
     '''
@@ -255,6 +258,11 @@ def get_best_estimates(all_pos_weights, all_pos_Bs, all_pos_means, all_pos_stds)
     return best_mus, best_sigs, best_Bs
 
 def save_gifs(Cs, all_pos_means, all_pos_stds, all_pos_weights, all_pos_Bs, gif_pathnames = './tracks', lim = None, nb_pix = 200, fps=1):
+    try:
+        plt
+        imageio
+    except:
+        raise ImportError('matplotlib and imageio has to be installed to use save_gifs') 
     best_mus, best_sigs, best_Bs = get_best_estimates(all_pos_weights, all_pos_Bs, all_pos_means, all_pos_stds)
     for ID in range(len(Cs)):
         all_images = []
