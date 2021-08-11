@@ -2,11 +2,12 @@ from extrack.extrack import get_2DSPT_params
 from extrack.extrack import predict_Bs
 import numpy as np
 
-def auto_fitting_2states(all_Cs,
-                         dt,
-                         steady_state = True,
-                         estimated_vals = {'LocErr' : 0.025, 'D0' : 1e-20, 'D1' : 0.05, 'F0' : 0.45, 'p01' : 0.05, 'p10' : 0.05},
-                         vary_params = {'LocErr' : True, 'D0' : False, 'D1' : True, 'F0' : True, 'p01' : True, 'p10' : True}):
+
+def fit_2states(all_Cs,
+                dt,
+                steady_state = True,
+                estimated_vals = {'LocErr' : 0.025, 'D0' : 1e-20, 'D1' : 0.05, 'F0' : 0.45, 'p01' : 0.05, 'p10' : 0.05},
+                vary_params = {'LocErr' : True, 'D0' : False, 'D1' : True, 'F0' : True, 'p01' : True, 'p10' : True}):
     
     model_fit = get_2DSPT_params(all_Cs, dt, nb_substeps = 1, states_nb = 2, do_frame = 1,frame_len = 4, verbose = 0, vary_params = vary_params, estimated_vals = estimated_vals, steady_state = steady_state)
     
@@ -53,10 +54,13 @@ def auto_fitting_2states(all_Cs,
     preds = predict_Bs(all_Cs, dt, model_fit.params, 2, frame_len = 12)
     return model_fit, preds
   
-def auto_fitting_3states(all_Cs,dt, steady_state = True, vary_params = { 'LocErr' : True, 'D0' : False, 'D1' :  True, 'D2' : True, 'F0' : True, 'F1' : True, 'p01' : True, 'p02' : True, 'p10' : True,'p12' :  True,'p20' :  True, 'p21' : True},
-                                                         estimated_vals = { 'LocErr' : 0.023, 'D0' : 1e-20, 'D1' : 0.02, 'D2' :  1, 'F0' : 0.33,  'F1' : 0.33, 'p01' : 0.1, 'p02' : 0.1, 'p10' :0.1, 'p12' : 0.1, 'p20' :0.1, 'p21' :0.1},
-                                                         min_values = { 'LocErr' : 0.007, 'D0' : 1e-20, 'D1' : 0.0000001, 'D2' :  0.000001, 'F0' : 0.001,  'F1' : 0.001, 'p01' : 0.001, 'p02' : 0.001, 'p10' :0.001, 'p12' : 0.001, 'p20' :0.001, 'p21' :0.001},
-                                                         max_values = { 'LocErr' : 0.6, 'D0' : 1e-20, 'D1' : 1, 'D2' :  10, 'F0' : 0.999,  'F1' : 0.999, 'p01' : 0.5, 'p02' : 0.5, 'p10' : 0.5, 'p12' : 0.5, 'p20' : 0.5, 'p21' : 0.5}):
+def fit_3states(all_Cs,
+                dt,
+                steady_state = True,
+                vary_params = { 'LocErr' : True, 'D0' : False, 'D1' :  True, 'D2' : True, 'F0' : True, 'F1' : True, 'p01' : True, 'p02' : True, 'p10' : True,'p12' :  True,'p20' :  True, 'p21' : True},
+                estimated_vals = { 'LocErr' : 0.023, 'D0' : 1e-20, 'D1' : 0.02, 'D2' :  1, 'F0' : 0.33,  'F1' : 0.33, 'p01' : 0.1, 'p02' : 0.1, 'p10' :0.1, 'p12' : 0.1, 'p20' :0.1, 'p21' :0.1},
+                min_values = { 'LocErr' : 0.007, 'D0' : 1e-20, 'D1' : 0.0000001, 'D2' :  0.000001, 'F0' : 0.001,  'F1' : 0.001, 'p01' : 0.001, 'p02' : 0.001, 'p10' :0.001, 'p12' : 0.001, 'p20' :0.001, 'p21' :0.001},
+                max_values = { 'LocErr' : 0.6, 'D0' : 1e-20, 'D1' : 1, 'D2' :  10, 'F0' : 0.999,  'F1' : 0.999, 'p01' : 0.5, 'p02' : 0.5, 'p10' : 0.5, 'p12' : 0.5, 'p20' : 0.5, 'p21' : 0.5}):
     '''
     all_Cs is a list of numpy arrays of tracks, each numpy array have the following dimensions : dim 0 = track ID, dim 1 = time position, dim 2 = x and y positions
     dt is a scalar : the time per frame
