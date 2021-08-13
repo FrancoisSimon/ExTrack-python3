@@ -425,7 +425,7 @@ def get_best_estimates(Cs, LocErr, ds, Fs, TR_params, frame_len = 10):
     all_mus = []
     all_sigs = []
     for track in Cs:
-        a,b, preds = P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TR_params, nb_substeps=1, do_frame = 1, frame_len = frame_len, do_preds = 1) 
+        a,b, preds = P_Cs_inter_bound_stats(track[None], LocErr, ds, Fs, TR_params, nb_substeps=1, do_frame = 1, frame_len = frame_len, do_preds = 1) 
         Bs = np.argmax(preds, 2)[None]
         mus, sigs = get_pos_PDF_fixedBs(Cs, LocErr, ds, Fs, TR_params, Bs)
     all_mus.append(mus)
