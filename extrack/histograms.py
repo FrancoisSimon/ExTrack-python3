@@ -5,6 +5,17 @@ Created on Thu Nov 11 17:01:56 2021
 
 @author: francois
 """
+import numpy as np
+
+GPU_computing = False
+
+if GPU_computing :
+    import cupy as cp
+    from cupy import asnumpy
+else :
+    import numpy as cp
+    def asnumpy(x):
+        return np.array(x)
 
 def P_segment_len(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5], nb_substeps=1, max_nb_states = 1000) :
     '''
