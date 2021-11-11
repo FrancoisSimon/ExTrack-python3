@@ -2,7 +2,6 @@ from extrack.extrack import get_2DSPT_params
 from extrack.extrack import predict_Bs
 import numpy as np
 
-
 def fit_2states(all_Cs,
                 dt,
                 steady_state = True,
