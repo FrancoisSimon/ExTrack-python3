@@ -29,6 +29,29 @@ def save_params(params, path = '.', fmt = 'json', file_name = 'params'):
     else :
         raise ValueError("format not supported, use one of : 'json', 'pkl', 'npy', 'csv'")
     
-        
-    
+def save_df_2_xml(df_DATA, path, dt)
+    track_IDs = np.unique(df_DATA['track_ID'])
+    with open(path, 'w') as f:
+        f.write('<?xml version="1.0" encoding="UTF-8"?>\n<Tracks nTracks="%s" spaceUnits="µm" frameInterval="%s" timeUnits="ms" generationDateTime="lun., 14 déc. 2020 11:25:17" from="TrackMate v4.0.1">\n'%(len(track_IDs), dt))
+        preds_str = ''
+        remove()
+        colnames = df_DATA.columns.to_list()
+        colnames.remove('X')
+        colnames.remove('Y')
+        colnames.remove('frame')
+        colnames.remove('track_ID')
+        pred_cols = []
+        [pred_cols.append(element) for element in colnames if element.startswith('pred_')]
+        other_cols = []
+        [other_cols.append(element) for element in colnames if not element.startswith('pred_')]
+
+        for track_ID in track_IDs:
+            track = df_DATA[df_DATA['track_ID']==0]
+            f.write('  <particle nSpots="%s">\n'%(len(track.index)))
+            for idx in track.index:
+                pos = track.iloc[idx]
+                f.write('    <detection t="%s" x="%s" y="%s" z="%s" />\n'%(pos['frame'],pos['X'],pos['Y'],0.0))
+                print(row)
+                dir(track)
+                track.index    
 
