@@ -1,5 +1,7 @@
-
 #def dict_pred_to_df_pred(all_Cs, all_Bs):
+import numpy as np
+import pickle
+import json
 
 def save_params(params, path = '.', fmt = 'json', file_name = 'params'):
     save_params = {}
@@ -7,7 +9,7 @@ def save_params(params, path = '.', fmt = 'json', file_name = 'params'):
     
     '''
     available formats : json, npy, csv
-    ''''        
+    '''
     if fmt == 'npy':
         np.save(path + '/' + file_name, save_params)
     elif fmt == 'pkl':
@@ -22,7 +24,7 @@ def save_params(params, path = '.', fmt = 'json', file_name = 'params'):
                 tf.write("%s,%s\n"%(key,save_params[key]))
     else :
         raise ValueError("format not supported, use one of : 'json', 'pkl', 'npy', 'csv'")
-        
+
 def pred_2_matrix(all_Css, pred_Bss, dt, all_frames = None):
     row_ID = 0
     nb_pos = 0
@@ -47,18 +49,18 @@ def pred_2_matrix(all_Css, pred_Bss, dt, all_frames = None):
             
             matrix[row_ID:row_ID+cur_track.shape[0]] = cur_track
             row_ID += cur_track.shape[0]
-        track_ID+=1
+            track_ID+=1
     return matrix
 
-def save_pred_2_CSV(all_Css, pred_Bss, dt, all_frames = None):
+def save_pred_2_CSV(path, all_Css, pred_Bss, dt, all_frames = None):
     track_ID = 0
     
     preds_header_str_fmt = ''
     preds_str_fmt = ''
     for k in range(pred_Bss[list(pred_Bss.keys())[0]].shape[2]):
         preds_header_str_fmt = preds_header_str_fmt + 'PRED_%s,'%(k)
-        preds_str_fmt = preds_str_fmt + '%s,'
-        
+        preds_str_fmt = preds_str_fmt + ',%s'
+    
     with open(path, 'w') as f:
         f.write('TRACK_ID,POSITION_X,POSITION_Y,POSITION_Z,POSITION_T,FRAME,%s\n'%(preds_header_str_fmt))
     
@@ -73,7 +75,7 @@ def save_pred_2_CSV(all_Css, pred_Bss, dt, all_frames = None):
                 track_ID+=1
                 for pos, p, frame in zip(track, preds, frames):
                     preds_str = preds_str_fmt%(tuple(p))
-                    f.write('%s,%s,%s,%s,%s,%s,%s\n'%(track_ID,p[0],p[1],0.0,dt* frame*1000, frame, preds_str))
+                    f.write('%s,%s,%s,%s,%s,%s%s\n'%(track_ID, p[0], p[1], 0.0, dt* frame*1000, frame, preds_str))
 
 def save_pred_2_xml(all_Css, pred_Bss, path, dt, all_frames = None):
     track_ID = 0
@@ -102,5 +104,3 @@ def save_pred_2_xml(all_Css, pred_Bss, path, dt, all_frames = None):
                 for pos, p, frame in zip(track, preds, frames):
                     preds_str = preds_str_fmt%(tuple(p))
                     f.write('    <detection t="%s" x="%s" y="%s" z="%s" %s/>\n'%(frame,p[0],p[1],0.0, preds_str))
-
-
