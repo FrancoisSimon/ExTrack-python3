@@ -1,4 +1,5 @@
-def dict_pred_to_df_pred(all_Cs, all_Bs):
+
+#def dict_pred_to_df_pred(all_Cs, all_Bs):
 
 def save_params(params, path = '.', fmt = 'json', file_name = 'params'):
     save_params = {}
@@ -21,7 +22,7 @@ def save_params(params, path = '.', fmt = 'json', file_name = 'params'):
                 tf.write("%s,%s\n"%(key,save_params[key]))
     else :
         raise ValueError("format not supported, use one of : 'json', 'pkl', 'npy', 'csv'")
-
+        
 def pred_2_matrix(all_Css, pred_Bss, dt, all_frames = None):
     row_ID = 0
     nb_pos = 0
@@ -31,7 +32,7 @@ def pred_2_matrix(all_Css, pred_Bss, dt, all_frames = None):
     
     matrix = np.empty((nb_pos, 4+pred_Bss[list(pred_Bss.keys())[0]].shape[2]))
     #TRACK_ID,POSITION_X,POSITION_Y,POSITION_Z,POSITION_T,FRAME,PRED_0, PRED_1,(PRED_2 etc)
-
+    track_ID = 0
     for len_ID in all_Css:
         all_Cs = all_Css[len_ID]
         pred_Bs = pred_Bss[len_ID]
@@ -46,6 +47,7 @@ def pred_2_matrix(all_Css, pred_Bss, dt, all_frames = None):
             
             matrix[row_ID:row_ID+cur_track.shape[0]] = cur_track
             row_ID += cur_track.shape[0]
+        track_ID+=1
     return matrix
 
 def save_pred_2_CSV(all_Css, pred_Bss, dt, all_frames = None):
