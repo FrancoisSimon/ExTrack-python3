@@ -22,11 +22,24 @@ try:
     import imageio
 except:
     pass
-from extrack.extrack import gaussian, P_Cs_inter_bound_stats, log_integrale_dif, first_log_integrale_dif, prod_2GaussPDF, prod_3GaussPDF, ds_froms_states, fuse_tracks, get_all_Bs, get_Ts_from_Bs
+
+from extrack.extrack import extract_params,predict_Bs, gaussian, P_Cs_inter_bound_stats, log_integrale_dif, first_log_integrale_dif, ds_froms_states, fuse_tracks, get_all_Bs, get_Ts_from_Bs
+from extrack.exporters import pred_2_matrix
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
+def prod_2GaussPDF(sigma1,sigma2, mu1, mu2):
+    sigma = ((sigma1**2*sigma2**2)/(sigma1**2+sigma2**2))**0.5
+    mu = (mu1*sigma2**2 + mu2*sigma1**2)/(sigma1**2 + sigma2**2)
+    LK = np.sum(-0.5*np.log(2*np.pi*(sigma1**2 + sigma2**2)) -(mu1-mu2)**2/(2*(sigma1**2 + sigma2**2)),-1)
+    return sigma, mu, LK
 
-def get_LC_Km_Ks(Cs, LocErr, ds, Fs, TR_params, nb_substeps=1, frame_len = 4):
+def prod_3GaussPDF(sigma1,sigma2,sigma3, mu1, mu2, mu3):
+    sigma, mu, LK = prod_2GaussPDF(sigma1,sigma2, mu1, mu2)
+    sigma, mu, LK2 = prod_2GaussPDF(sigma,sigma3, mu, mu3)
+    LK = LK + LK2
+    return sigma, mu, LK
+
+def get_LC_Km_Ks(Cs, LocErr, ds, Fs, TrMat, nb_substeps=1, frame_len = 4):
     '''
     variation of the main function to extract LC, Km and Ks for all positions
     '''
@@ -36,14 +49,14 @@ def get_LC_Km_Ks(Cs, LocErr, ds, Fs, TR_params, nb_substeps=1, frame_len = 4):
     Cs = Cs.reshape((nb_Tracks,1,nb_locs, nb_dims))
     Cs = cp.array(Cs)
     
-    nb_states = TR_params[0]
+    nb_states = TrMat.shape[0]
     all_Km = []
     all_Ks = []
-    all_LP = [] 
+    all_LP = []
     
     preds = np.zeros((nb_Tracks, nb_locs, nb_states))-1
     
-    TrMat = cp.array(TR_params[1]) # transition matrix of the markovian process
+    TrMat = cp.array(TrMat) # transition matrix of the markovian process
     current_step = 1
     
     cur_Bs = get_all_Bs(nb_substeps + 1, nb_states) # get initial sequences of states
@@ -146,15 +159,15 @@ def get_LC_Km_Ks(Cs, LocErr, ds, Fs, TR_params, nb_substeps=1, frame_len = 4):
         preds[:,0:frame_len, state] = asnumpy(cp.sum(B_is_state*P[:,:,None],axis = 1)/cp.sum(P[:,:,None],axis = 1))
     return LP, cur_Bs, preds, all_Km, all_Ks, all_LP
 
-def get_pos_PDF(Cs, LocErr, ds, Fs, TR_params, frame_len = 7):
+def get_pos_PDF(Cs, LocErr, ds, Fs, TrMat, frame_len = 7):
     ds = cp.array(ds)
     Cs = cp.array(Cs)
     # get Km, Ks and LC forward
-    LP1, final_Bs1, preds1, all_Km1, all_Ks1, all_LP1 = get_LC_Km_Ks(Cs, LocErr, ds, Fs, TR_params, nb_substeps=1, frame_len = frame_len)
+    LP1, final_Bs1, preds1, all_Km1, all_Ks1, all_LP1 = get_LC_Km_Ks(Cs, LocErr, ds, Fs, TrMat, nb_substeps=1, frame_len = frame_len)
     #get Km, Ks and LC backward
-    TR_params2 = [TR_params[0], TR_params[1].T] # transpose the matrix for the backward transitions
+    TrMat2 = np.copy(TrMat).T # transpose the matrix for the backward transitions
     Cs2 = Cs[:,::-1,:] # inverse the time steps
-    LP2, final_Bs2, preds2, all_Km2, all_Ks2, all_LP2 = get_LC_Km_Ks(Cs2, LocErr, ds, cp.ones(TR_params2[0],)/TR_params2[0], TR_params2, nb_substeps=1, frame_len = frame_len) # we set a neutral Fs so it doesn't get counted twice
+    LP2, final_Bs2, preds2, all_Km2, all_Ks2, all_LP2 = get_LC_Km_Ks(Cs2, LocErr, ds, cp.ones(TrMat2.shape[0],)/TrMat2.shape[0], TrMat2, nb_substeps=1, frame_len = frame_len) # we set a neutral Fs so it doesn't get counted twice
 
     # do the approximation for the first position, product of 2 gaussian PDF, (integrated term and localization error)    
     sig, mu, LC = prod_2GaussPDF(LocErr,all_Ks1[-1], Cs[:,None,0], all_Km1[-1])
@@ -187,7 +200,7 @@ def get_pos_PDF(Cs, LocErr, ds, Fs, TR_params, frame_len = 7):
         nb_Bs2 = Ks2.shape[2]
         nb_tracks = Km1.shape[0]
         nb_dims = Km1.shape[3]
-        nb_states = TR_params[0]
+        nb_states = TrMat.shape[0]
         LP2.shape
         Bs2_len = np.min([k+1, frame_len-1])
         cur_Bs2 = get_all_Bs(Bs2_len, nb_states)
@@ -313,7 +326,7 @@ def save_gifs(Cs, all_pos_means, all_pos_stds, all_pos_weights, all_pos_Bs, gif_
         imageio.mimsave(gif_pathnames + str(ID)+'.gif', all_images,fps=fps)
 
 
-def get_LC_Km_Ks_fixed_Bs(Cs, LocErr, ds, Fs, TR_params, Bs):
+def get_LC_Km_Ks_fixed_Bs(Cs, LocErr, ds, Fs, TrMat, Bs):
     '''
     variation of the main function to extract LC, Km and Ks for all positions
     '''
@@ -327,7 +340,7 @@ def get_LC_Km_Ks_fixed_Bs(Cs, LocErr, ds, Fs, TR_params, Bs):
     all_Ks = []
     all_LP = []
         
-    TrMat = cp.array(TR_params[1]) # transition matrix of the markovian process
+    TrMat = cp.array(TrMat) # transition matrix of the markovian process
     current_step = 1
     
     cur_states = Bs[:,:,-2:].astype(int) #states of interest for the current displacement
@@ -382,7 +395,7 @@ def get_LC_Km_Ks_fixed_Bs(Cs, LocErr, ds, Fs, TR_params, Bs):
     all_LP = cp.array(all_LP)[:,0,0]
     return all_Km, all_Ks, all_LP
 
-def get_pos_PDF_fixedBs(Cs, LocErr, ds, Fs, TR_params, Bs):
+def get_pos_PDF_fixedBs(Cs, LocErr, ds, Fs, TrMat, Bs):
     '''
     get mu and sigma for each position given inputed Bs,
     ideally used for a single track with its most likely set of states
@@ -390,11 +403,11 @@ def get_pos_PDF_fixedBs(Cs, LocErr, ds, Fs, TR_params, Bs):
     ds = np.array(ds)
     Cs = cp.array(Cs)
     # get Km, Ks and LC forward
-    all_Km1, all_Ks1, all_LP1 =  get_LC_Km_Ks_fixed_Bs(Cs, LocErr, ds, Fs, TR_params, Bs)
+    all_Km1, all_Ks1, all_LP1 =  get_LC_Km_Ks_fixed_Bs(Cs, LocErr, ds, Fs, TrMat, Bs)
     #get Km, Ks and LC backward
-    TR_params2 = [TR_params[0], TR_params[1].T] # transpose the matrix for the backward transitions
+    TrMat2 = np.copy(TrMat).T # transpose the matrix for the backward transitions
     Cs2 = Cs[:,::-1,:] # inverse the time steps
-    all_Km2, all_Ks2, all_LP2 = get_LC_Km_Ks_fixed_Bs(Cs2, LocErr, ds, cp.ones(TR_params2[0],)/TR_params2[0], TR_params2, Bs[:,:,::-1])
+    all_Km2, all_Ks2, all_LP2 = get_LC_Km_Ks_fixed_Bs(Cs2, LocErr, ds, cp.ones(TrMat2.shape[0],)/TrMat2.shape[0], TrMat2, Bs[:,:,::-1])
     # do the approximation for the first position, product of 2 gaussian PDF, (integrated term and localization error)    
 
     sig, mu, LC = prod_2GaussPDF(LocErr,all_Ks1[-1], Cs[:,0], all_Km1[-1])
@@ -420,19 +433,49 @@ def get_pos_PDF_fixedBs(Cs, LocErr, ds, Fs, TR_params, Bs):
     all_pos_stds.append(sig[None])
     return cp.array(all_pos_means)[:,0], cp.array(all_pos_stds)[:,0]
 
-def get_best_estimates(Cs, LocErr, ds, Fs, TR_params, frame_len = 10):
+def get_global_sigs_mus(all_pos_means, all_pos_stds, all_pos_weights, idx = 0):
+    w_sigs = []
+    w_mus = []
+    for mus, sigs, LC in zip(all_pos_means, all_pos_stds, all_pos_weights):
+        mus = mus[idx]
+        sigs = sigs[idx]
+        LC = LC[idx]
+        LC = LC - np.max(LC, keepdims = True)
+        #sigs = sigs[LC > np.max(LC) + np.log(1e-5)] # remove the unlikely set of states
+        #mus = mus[LC > np.max(LC) + np.log(1e-5)] # remove the unlikely set of states
+        #LC = LC[LC > np.max(LC) + np.log(1e-5)] # remove the unlikely set of states
+        w_sigs.append(np.sum(np.exp(LC[:,None])**2 * sigs) / np.sum(np.exp(LC[:,None])**2))
+        w_mus.append(np.sum(np.exp(LC[:,None]) * mus,0) / np.sum(np.exp(LC[:,None]),0))
+    return np.array(w_mus), np.array(w_sigs)
+
+def full_pred_2_matrix(all_Css, params, dt, all_frames = None, cell_dims = [1,None,None], states_nb = 2, frame_len = 15):
+    nb_dims = list(all_Css.items())[0][1].shape[2]
+    pred_Bss = predict_Bs(all_Css, dt, params, states_nb=states_nb, frame_len=frame_len, cell_dims = cell_dims)
+    
+    DATA = pred_2_matrix(all_Css, pred_Bss, dt, all_frames = all_frames)
+    DATA = np.concatenate((DATA, np.empty((DATA.shape[0], nb_dims+1))),1)
+    LocErr, ds, Fs, TrMat = extract_params(params, dt, states_nb, nb_substeps = 1)
+    for ID in np.unique(DATA[:,2]):
+        track = DATA[DATA[:,2]==ID,:nb_dims][None]
+        all_pos_means, all_pos_stds, all_pos_weights, all_pos_Bs = get_pos_PDF(track, LocErr, ds, Fs, TrMat, frame_len = frame_len//2+3)
+        w_mus, w_sigs = get_global_sigs_mus(all_pos_means, all_pos_stds, all_pos_weights, idx = 0)
+        DATA[DATA[:,2]==ID,-1] = w_sigs
+        DATA[DATA[:,2]==ID,-nb_dims-1:-1] = w_mus
+    return DATA
+
+def get_best_estimates(Cs, LocErr, ds, Fs, TrMat, frame_len = 10):
     all_mus = []
     all_sigs = []
     for track in Cs:
-        a,b, preds = P_Cs_inter_bound_stats(track[None], LocErr, ds, Fs, TR_params, nb_substeps=1, do_frame = 1, frame_len = frame_len, do_preds = 1) 
+        a,b, preds = P_Cs_inter_bound_stats(track[None], LocErr, ds, Fs, TrMat, nb_substeps=1, do_frame = 1, frame_len = frame_len, do_preds = 1) 
         Bs = np.argmax(preds, 2)[None]
-        mus, sigs = get_pos_PDF_fixedBs(Cs, LocErr, ds, Fs, TR_params, Bs)
+        mus, sigs = get_pos_PDF_fixedBs(Cs, LocErr, ds, Fs, TrMat, Bs)
     all_mus.append(mus)
     all_sigs.append(sigs)
     return mus, sigs
 
 def do_gifs_from_params(all_Cs, params, dt, gif_pathnames = './tracks', frame_len = 9, states_nb = 2, nb_pix = 200, fps = 1):
     for Cs in all_Cs:
-        LocErr, ds, Fs, TR_params = extract_params(params, dt, states_nb, nb_substeps = 1)
-        all_pos_means, all_pos_stds, all_pos_weights, all_pos_Bs = get_pos_PDF(Cs, LocErr, ds, Fs, TR_params, frame_len = frame_len)
+        LocErr, ds, Fs, TrMat = extract_params(params, dt, states_nb, nb_substeps = 1)
+        all_pos_means, all_pos_stds, all_pos_weights, all_pos_Bs = get_pos_PDF(Cs, LocErr, ds, Fs, TrMat, frame_len = frame_len)
         save_gifs(Cs, all_pos_means, all_pos_stds, all_pos_weights, all_pos_Bs, gif_pathnames = gif_pathnames + '_' + str(len(Cs[0])) + '_pos', lim = None, nb_pix = nb_pix, fps=fps)    
