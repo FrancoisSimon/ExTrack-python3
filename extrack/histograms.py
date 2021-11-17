@@ -5,6 +5,7 @@ Created on Thu Nov 11 17:01:56 2021
 
 @author: francois
 """
+
 import numpy as np
 
 GPU_computing = False
@@ -16,6 +17,9 @@ else :
     import numpy as cp
     def asnumpy(x):
         return np.array(x)
+
+import scipy
+from extrack.extrack import extract_params, get_all_Bs, get_Ts_from_Bs, first_log_integrale_dif, log_integrale_dif
 
 def P_segment_len(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5], nb_substeps=1, max_nb_states = 1000) :
     '''
@@ -43,6 +47,9 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5
     nb_states = TrMat.shape[0]
     Cs = Cs[:,:,::-1]
     min_l = 5
+    
+    cell_dims = np.array(cell_dims)
+    cell_dims = cell_dims[cell_dims!=None]
     
     cur_Bs = get_all_Bs(nb_substeps + 1, nb_states)[None]
     
@@ -275,7 +282,7 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5
     return LP, cur_Bs, seg_len_hist
 
 #all_Cs = all_Css
-def len_hist(params, all_Cs, dt, cell_dims=[0.5], states_nb=2, nb_substeps=1, max_nb_states = 500):
+def len_hist(params, all_Cs, dt, cell_dims=[0.5,None,None], states_nb=2, nb_substeps=1, max_nb_states = 500):
     '''
     each probability can be multiplied to get a likelihood of the model knowing
     the parameters LocErr, D0 the diff coefficient of state 0 and F0 fraction of
