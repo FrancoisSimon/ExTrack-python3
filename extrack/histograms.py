@@ -294,7 +294,7 @@ def len_hist(all_Cs, params, dt, cell_dims=[0.5,None,None], states_nb=2, nb_subs
 
     if type(all_Cs) == type({}):
         new_all_Cs = []
-        for l in range(all_Cs):
+        for l in all_Cs:
             new_all_Cs.append(all_Cs[l])
         all_Cs = new_all_Cs
     
