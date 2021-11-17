@@ -282,7 +282,7 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5
     return LP, cur_Bs, seg_len_hist
 
 #all_Cs = all_Css
-def len_hist(params, all_Cs, dt, cell_dims=[0.5,None,None], states_nb=2, nb_substeps=1, max_nb_states = 500):
+def len_hist(all_Cs, params, dt, cell_dims=[0.5,None,None], states_nb=2, nb_substeps=1, max_nb_states = 500):
     '''
     each probability can be multiplied to get a likelihood of the model knowing
     the parameters LocErr, D0 the diff coefficient of state 0 and F0 fraction of
