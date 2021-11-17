@@ -6,7 +6,6 @@ import json
 def save_params(params, path = '.', fmt = 'json', file_name = 'params'):
     save_params = {}
     [save_params.update({param : params[param].value}) for param in params]
-    
     '''
     available formats : json, npy, csv
     '''
