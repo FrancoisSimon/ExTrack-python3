@@ -20,7 +20,6 @@ else :
 
 import scipy
 from extrack.extrack import extract_params, get_all_Bs, get_Ts_from_Bs, first_log_integrale_dif, log_integrale_dif
-
 def P_segment_len(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5], nb_substeps=1, max_nb_states = 1000) :
     '''
     compute the product of the integrals over Ri as previousily described
@@ -50,6 +49,7 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5
     
     cell_dims = np.array(cell_dims)
     cell_dims = cell_dims[cell_dims!=None]
+    
     
     cur_Bs = get_all_Bs(nb_substeps + 1, nb_states)[None]
     
@@ -191,8 +191,8 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5
                     
             current_step += 1
         
+        
         if isBL:
-            
             for iii in range(nb_substeps):
                 cur_Bs = np.concatenate((np.repeat(np.mod(np.arange(cur_Bs.shape[1]*nb_states),nb_states)[None,:,None], nb_Tracks,0),np.repeat(cur_Bs,nb_states,1)),-1)
             
@@ -216,7 +216,7 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5
             LL = LL + np.log(pBL + (1-end_p_stay) - pBL * (1-end_p_stay))
             cur_Bs = cur_Bs[:,:,1:]
             #isBL = 0
-            
+        
         newKs = cp.array((Ks**2 + LocErr**2)**0.5)[:,:,0]
         log_integrated_term = -cp.log(2*np.pi*newKs**2) - cp.sum((Cs[:,:,0] - Km)**2,axis=2)/(2*newKs**2)
         #LF = cp.log(Fs[cur_Bs[:,:,0].astype(int)]) # Log proba of starting in a given state (fractions)
@@ -230,7 +230,6 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5
         
     P = np.exp(LP+LL)
     #P = np.exp(LP)
-    
     
     cur_nb_Bs = len(cur_Bs[0])
     cur_pos = cur_Bs[:,:,0]
@@ -250,39 +249,24 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5
             last_len = (nb_locs - np.sum(seg_lens, (2,3)))[:,:,None]
     
     cat_states = (cur_pos[:,:,None] == np.arange(nb_states)[None,None]).astype(int)
-    #seg_lens[:,:,-1] = last_len * cat_states # include the lenght of the last position (bleaching or leaving the FOV)
-    seg_lens[:,:,-1] = 0 # do not include the lenght of the last position (bleaching or leaving the FOV)
+    seg_lens[:,:,-1] = last_len * cat_states # include the lenght of the last position (bleaching or leaving the FOV)
+    #seg_lens[:,:,-1] = 0 # do not include the lenght of the last position (bleaching or leaving the FOV)
     #seg_lens[:,:,0] = 0 # do not include the lenght of the last position (bleaching or leaving the FOV)
     #last_seg_lens = seg_lens[:,:,-1:]
     
-    seg_len_hist = np.zeros((nb_locs, nb_states))
+    seg_len_hist = np.zeros((nb_locs-1, nb_states))
     #last_seg_len_hist = np.zeros((nb_locs, nb_states))
-    '''
-    for k in range(1, nb_locs+1+isBL):
-        #P_seg = (P[:,:,None,None] * np.exp(-LL)[:,:,None,None] * (seg_lens == k).astype(int))
-        P_seg = (P[:,:,None,None] * (seg_lens == k).astype(int))
-        P_seg = np.sum(P_seg, (1,2)) / (np.sum(P_seg,(1,2,3))[:,None] +1e-300) # seemed good, normalize with regard to the proba of the track without the proba of leaving the FOV (to sum up over different track lengths) 
-        P_seg = np.sum(P_seg,0)
-        seg_len_hist[k-1] = P_seg
-    '''
-    for k in range(1, nb_locs+1):
+
+    for k in range(1, nb_locs):
         P_seg = ((P/np.sum(P, axis=1, keepdims=True))[:,:,None,None] * (seg_lens == k).astype(int))
         #P_seg = np.sum(P_seg, (1,2)) / (np.sum(P_seg,(1,2,3))[:,None] +1e-300) # seemed good, normalize with regard to the proba of the track without the proba of leaving the FOV (to sum up over different track lengths) 
         P_seg = np.sum(P_seg, (1,2)) # seemed good, normalize with regard to the proba of the track without the proba of leaving the FOV (to sum up over different track lengths) 
         P_seg = np.sum(P_seg,0)
         seg_len_hist[k-1] = P_seg
-    '''
-    for k in range(1, nb_locs+1):
-        P_seg = ((P/np.sum(P, axis=1, keepdims=True))[:,:,None,None] * (last_seg_lens == k).astype(int))
-        #P_seg = np.sum(P_seg, (1,2)) / (np.sum(P_seg,(1,2,3))[:,None] +1e-300) # seemed good, normalize with regard to the proba of the track without the proba of leaving the FOV (to sum up over different track lengths) 
-        P_seg = np.sum(P_seg, (1,2)) # seemed good, normalize with regard to the proba of the track without the proba of leaving the FOV (to sum up over different track lengths) 
-        P_seg = np.sum(P_seg,0)
-        last_seg_len_hist[k-1] = P_seg
-    '''
+    
     return LP, cur_Bs, seg_len_hist
 
-#all_Cs = all_Css
-def len_hist(all_Cs, params, dt, cell_dims=[0.5,None,None], states_nb=2, nb_substeps=1, max_nb_states = 500):
+def len_hist(all_Cs,params, dt, cell_dims=[0.5,None,None], states_nb=2, nb_substeps=1, max_nb_states = 500):
     '''
     each probability can be multiplied to get a likelihood of the model knowing
     the parameters LocErr, D0 the diff coefficient of state 0 and F0 fraction of
@@ -299,13 +283,13 @@ def len_hist(all_Cs, params, dt, cell_dims=[0.5,None,None], states_nb=2, nb_subs
         all_Cs = new_all_Cs
     
     #seg_len_hists = np.zeros((all_Cs[-1].shape[1]+1,states_nb))
-    seg_len_hists = np.zeros((all_Cs[-1].shape[1]+1,states_nb))
+    seg_len_hists = np.zeros((all_Cs[-1].shape[1],states_nb))
     for k in range(len(all_Cs)):
         print(k)
         if k == len(all_Cs)-1:
-            isBL = 0 # last position correspond to tracks which didn't disapear within maximum track length
+            isBL = 1 # last position correspond to tracks which didn't disapear within maximum track length
         else:
-            isBL = 1
+            isBL = 0
         
         Css = all_Cs[k]
         if len(Css) > 0:
@@ -314,6 +298,7 @@ def len_hist(all_Cs, params, dt, cell_dims=[0.5,None,None], states_nb=2, nb_subs
                 Csss = Css[n*nb_max:(n+1)*nb_max]
                 LP, cur_Bs, seg_len_hist  = P_segment_len(Csss, LocErr, ds, Fs, TrMat, pBL=pBL, isBL = isBL, cell_dims = cell_dims, nb_substeps=nb_substeps, max_nb_states = max_nb_states)
                 isBL = 0
+                print(seg_len_hist)
                 #seg_len_hists[:all_Cs[k].shape[1]+isBL] = seg_len_hists[:all_Cs[k].shape[1]+isBL] + seg_len_hist
                 seg_len_hists[:seg_len_hist.shape[0]] = seg_len_hists[:seg_len_hist.shape[0]] + seg_len_hist
 
