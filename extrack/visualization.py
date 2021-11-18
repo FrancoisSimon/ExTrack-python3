@@ -1,5 +1,27 @@
 from matplotlib import pyplot as plt
 
+def visualize_states_durations(all_Css,
+                               params,
+                               dt,
+                               cell_dims = cell_dims,
+                               states_nb = states_nb,
+                               max_nb_states = 500
+                               long_tracks = True,
+                               min_len = 20):
+    len_hists = len_hist(all_Css, params, dt, cell_dims=cell_dims, states_nb=states_nb, nb_substeps=1, max_nb_states = max_nb_states)
+    
+    plt.figure(figsize = (3,3))
+    for k, hist in enumerate(len_hists.T):
+        plt.plot(np.arange(1,len(hist)+1), hist/np.sum(hist), label='state %s'%k)
+
+    plt.legend()
+    plt.yscale('log')
+    plt.grid()
+    plt.xlim([0,20])
+    plt.ylim([0.001,0.5])
+    plt.xlabel('state duration (in step)')
+    plt.ylabel('fraction')
+    plt.tight_layout()
 
 plt.figure()
 nb_plots = 5
