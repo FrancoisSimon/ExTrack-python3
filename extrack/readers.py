@@ -125,10 +125,6 @@ def read_CSV_table(path, # path of the csv file to read
         print('problem with {path}')
         raise e    
     return tracks, quality, frames, nb_peaks
-tracks = all_Css
-pred_Bs = preds
-frames = None
-opt_metrics = {}
 
 def extrack_to_pandas(tracks, frames, opt_metrics, pred_Bs):
     '''
