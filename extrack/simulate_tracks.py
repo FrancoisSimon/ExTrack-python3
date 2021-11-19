@@ -195,4 +195,12 @@ def sim_FOV(nb_tracks=10000,
         all_Css[k] = np.array(all_Css[k])
         all_Bss[k] = np.array(all_Bss[k])
         print(len(all_Css[k]))
-    return all_Css, all_Bss
+        
+    all_Css_dict = {}
+    all_Bss_dict = {}
+    for Cs, Bs in zip(all_Css, all_Bss):
+        l = str(Cs.shape[1])
+        all_Css_dict[l] = Cs
+        all_Bss_dict[l] = Bs     
+        
+    return all_Css_dict, all_Bss_dict
