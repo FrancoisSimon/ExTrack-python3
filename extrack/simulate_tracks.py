@@ -120,15 +120,15 @@ def is_in_FOV(positions, cell_dims):
     return inFOV
 
 def sim_FOV(nb_tracks=10000,
-                    max_track_len=40, 
-                    LocErr=0.02,
-                    Ds = np.array([0,0.05]),
-                    initial_fractions = np.array([0.6,0.4]),
-                    TrMat = np.array([[0.9,0.1],[0.1,0.9]]),
-                    dt = 0.02,
-                    pBL = 0.1, 
-                    cell_dims = [0.5,None,None], # dimension limits in x, y and z respectively
-                    min_len = 2):
+            max_track_len=40, 
+            LocErr=0.02,
+            Ds = np.array([0,0.05]),
+            initial_fractions = np.array([0.6,0.4]),
+            TrMat = np.array([[0.9,0.1],[0.1,0.9]]),
+            dt = 0.02,
+            pBL = 0.1, 
+            cell_dims = [0.5,None,None], # dimension limits in x, y and z respectively
+            min_len = 2):
     
     nb_sub_steps = 20
     nb_strobo_frames = 1
@@ -190,7 +190,7 @@ def sim_FOV(nb_tracks=10000,
             positions = positions[np.argmin(inFOV):]
             state = state[np.argmin(inFOV):]
             inFOV = inFOV[np.argmin(inFOV):]
-        
+    
     for k in range(len(all_Css)):
         all_Css[k] = np.array(all_Css[k])
         all_Bss[k] = np.array(all_Bss[k])
