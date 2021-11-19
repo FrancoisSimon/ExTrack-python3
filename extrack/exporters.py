@@ -52,7 +52,7 @@ def extrack_2_matrix(all_Css, pred_Bss, dt, all_frames = None):
             track_ID+=1
     return matrix
 
-def extrack_2_pandas(tracks, frames, opt_metrics, pred_Bs):
+def extrack_2_pandas(tracks, pred_Bs, frames = None, opt_metrics = {}):
     '''
     turn outputs form ExTrack to a unique pandas DataFrame
     '''
