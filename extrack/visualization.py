@@ -5,7 +5,7 @@ def visualize_states_durations(all_Css,
                                dt,
                                cell_dims = cell_dims,
                                states_nb = states_nb,
-                               max_nb_states = 500
+                               max_nb_states = 500,
                                long_tracks = True,
                                min_len = 20):
     len_hists = len_hist(all_Css, params, dt, cell_dims=cell_dims, states_nb=states_nb, nb_substeps=1, max_nb_states = max_nb_states)
