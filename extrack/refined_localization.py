@@ -24,7 +24,7 @@ except:
     pass
 
 from extrack.extrack import extract_params,predict_Bs, P_Cs_inter_bound_stats, log_integrale_dif, first_log_integrale_dif, ds_froms_states, fuse_tracks, get_all_Bs, get_Ts_from_Bs
-from extrack.exporters import pred_2_matrix
+from extrack.exporters import extrack_2_matrix
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 def prod_2GaussPDF(sigma1,sigma2, mu1, mu2):
@@ -451,11 +451,11 @@ def get_global_sigs_mus(all_pos_means, all_pos_stds, all_pos_weights, idx = 0):
         w_mus.append(np.sum(np.exp(LC[:,None]) * mus,0) / np.sum(np.exp(LC[:,None]),0))
     return np.array(w_mus), np.array(w_sigs)
 
-def full_pred_2_matrix(all_Css, params, dt, all_frames = None, cell_dims = [1,None,None], states_nb = 2, frame_len = 15):
+def full_extrack_2_matrix(all_Css, params, dt, all_frames = None, cell_dims = [1,None,None], states_nb = 2, frame_len = 15):
     nb_dims = list(all_Css.items())[0][1].shape[2]
     pred_Bss = predict_Bs(all_Css, dt, params, states_nb=states_nb, frame_len=frame_len, cell_dims = cell_dims)
     
-    DATA = pred_2_matrix(all_Css, pred_Bss, dt, all_frames = all_frames)
+    DATA = extrack_2_matrix(all_Css, pred_Bss, dt, all_frames = all_frames)
     DATA = np.concatenate((DATA, np.empty((DATA.shape[0], nb_dims+1))),1)
     LocErr, ds, Fs, TrMat = extract_params(params, dt, states_nb, nb_substeps = 1)
     for ID in np.unique(DATA[:,2]):
