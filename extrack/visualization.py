@@ -10,25 +10,33 @@ def visualize_states_durations(all_Css,
                                states_nb = 2,
                                max_nb_states = 500,
                                long_tracks = True,
-                               min_len = 20):
+                               min_len = 20,
+                               steps = False):
+    
     len_hists = len_hist(all_Css, params, dt, cell_dims=cell_dims, states_nb=states_nb, nb_substeps=1, max_nb_states = max_nb_states)
+    
+    if step:
+        step_type = 'step'
+        dt = 1
+    else:
+        step_type = 's'
     
     plt.figure(figsize = (3,3))
     for k, hist in enumerate(len_hists.T):
-        plt.plot(np.arange(1,len(hist)+1), hist/np.sum(hist), label='state %s'%k)
-
+        plt.plot(np.arange(1,len(hist)+1)*dt, hist/np.sum(hist), label='state %s'%k)
+    
     plt.legend()
     plt.yscale('log')
     plt.grid()
-    plt.xlim([0,20])
+    plt.xlim([0,min_len*dt])
     plt.ylim([0.001,0.5])
-    plt.xlabel('state duration (in step)')
+    plt.xlabel('state duration (%s)'(step_type))
     plt.ylabel('fraction')
     plt.tight_layout()
 
 def visualize_tracks(DATA,
-                     track_length_range = [10,np.inf],
-                     ):
+                     track_length_range = [10,np.inf]):
+    
     nb_states = 0
     for param in list(DATA.keys()):
         if param.find('pred')+1:
