@@ -62,7 +62,7 @@ def first_log_integrale_dif(Ci, LocErr, cur_ds):
     Km = Ci
     return Km, Ks
 
-def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5], nb_substeps=1, frame_len = 6, do_preds = 0, no_single_Tr = 0) :
+def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5], nb_substeps=1, frame_len = 6, do_preds = 0) :
     '''
     compute the product of the integrals over Ri as previousily described
     work in log space to avoid overflow and underflow
@@ -150,11 +150,7 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
         cur_ds = cp.mean(cur_ds**2, axis = 2)**0.5
         cur_ds = cur_ds[:,:,None]
         LT = get_Ts_from_Bs(cur_states, TrMat)
-        if no_single_Tr:
-            T = np.abs(cur_Bs[:,:,1:3] - cur_Bs[:,:,0:2])
-            TT = np.any((T[:,:,1:]==1) * (T[:,:,:-1]==1),-1)[0]
-            LT[:,TT] = LT[:,TT] + np.log(0.001)
-            LT[:,1:][:,TT[:-1]] = LT[:,1:][:,TT[:-1]] + np.log(1-0.1)
+
         #np.arange(32)[None][:,TT]
         #np.arange(32)[None][:,1:][:,TT[:-1]]
         # repeat the previous matrix to account for the states variations due to the new position
@@ -307,7 +303,7 @@ def get_Ts_from_Bs(all_Bs, TrMat):
         LT += cp.log(TrMat[all_Bs[:,:,k], all_Bs[:,:,k+1]])
     return LT
 
-def Proba_Cs(Cs, LocErr, ds, Fs, TrMat,pBL,isBL, cell_dims, nb_substeps, frame_len, no_single_Tr):
+def Proba_Cs(Cs, LocErr, ds, Fs, TrMat,pBL,isBL, cell_dims, nb_substeps, frame_len):
     '''
     inputs the observed localizations and determine the probability of 
     observing these data knowing the localization error, D the diffusion coef,
@@ -316,7 +312,7 @@ def Proba_Cs(Cs, LocErr, ds, Fs, TrMat,pBL,isBL, cell_dims, nb_substeps, frame_l
     over all Bs to get the proba of Cs (knowing the initial position c0)
     '''
 
-    LP_CB, _, _  = P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL,isBL,cell_dims, nb_substeps, frame_len, 0, no_single_Tr)
+    LP_CB, _, _  = P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL,isBL,cell_dims, nb_substeps, frame_len, 0)
     # calculates P(C) the sum of P(C inter B) for each track
     max_LP = np.max(LP_CB, axis = 1, keepdims = True)
     LP_CB = LP_CB - max_LP
@@ -447,7 +443,7 @@ def extract_params(params, dt, states_nb, nb_substeps):
     ds = np.sqrt(2*Ds*dt)
     return LocErr, ds, Fs, TrMat, pBL
 
-def cum_Proba_Cs(params, all_Cs, dt, cell_dims, states_nb, nb_substeps, frame_len, verbose = 1, no_single_Tr = 0):
+def cum_Proba_Cs(params, all_Cs, dt, cell_dims, states_nb, nb_substeps, frame_len, verbose = 1):
     '''
     each probability can be multiplied to get a likelihood of the model knowing
     the parameters LocErr, D0 the diff coefficient of state 0 and F0 fraction of
@@ -467,7 +463,7 @@ def cum_Proba_Cs(params, all_Cs, dt, cell_dims, states_nb, nb_substeps, frame_le
             nb_max = 700
             for n in range(int(np.ceil(len(Css)/nb_max))):
                 Csss = Css[n*nb_max:(n+1)*nb_max]
-                LP = Proba_Cs(Csss, LocErr, ds, Fs, TrMat,pBL, isBL,cell_dims, nb_substeps, frame_len, no_single_Tr)
+                LP = Proba_Cs(Csss, LocErr, ds, Fs, TrMat,pBL, isBL,cell_dims, nb_substeps, frame_len)
                 #plt.clf()
                 #plt.hist(np.log(Ps), np.arange(-5,50, 0.5), density = True)
                 #plt.hist(Ps, np.arange(0,np.exp(18), np.exp(18)/200), density = True)
@@ -497,8 +493,7 @@ def get_2DSPT_params(all_Cs,
                      frame_len = 8,
                      verbose = 1,
                      method = 'powell',
-                     steady_state = True,
-                     no_single_Tr = 0,
+                     steady_state = False,
                      cell_dims = [0.5], # list of dimensions limit for the field of view (FOV) of the cell in um, a membrane protein in a typical e-coli cell in tirf would have a cell_dims = [0.5,3], in case of cytosolic protein one should imput the depth of the FOV e.g. [0.3] for tirf or [0.8] for hilo
                      vary_params = {'LocErr' : True, 'D0' : False, 'D1' : True, 'F0' : True, 'p01' : True, 'p10' : True, 'pBL' : True},
                      estimated_vals =  {'LocErr' : 0.025, 'D0' : 1e-20, 'D1' : 0.05, 'F0' : 0.45, 'p01' : 0.05, 'p10' : 0.05, 'pBL' : 0.1},
@@ -640,6 +635,6 @@ def get_2DSPT_params(all_Cs,
     params = Parameters()
     [params.add(**param_kwargs[k]) for k in range(len(param_kwargs))]
     #print(params)
-    fit = minimize(cum_Proba_Cs, params, args=(all_Cs, dt, cell_dims, states_nb, nb_substeps, frame_len, verbose, no_single_Tr), method = method, nan_policy = 'propagate')
+    fit = minimize(cum_Proba_Cs, params, args=(all_Cs, dt, cell_dims, states_nb, nb_substeps, frame_len, verbose), method = method, nan_policy = 'propagate')
     return fit
 
