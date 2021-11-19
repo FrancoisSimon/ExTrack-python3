@@ -21,6 +21,38 @@ def markovian_process(TrMat, initial_fractions, nb_tracks, track_len):
             states[:,k] += (randoms[:,k] > cumMat[states[:,k-1]][:,s]).astype(int)
     return states
 
+def get_fractions_from_TrMat(TrMat):
+    if len(TrMat) == 2:
+        p01 = TrMat[0,1]
+        p10 = TrMat[1,0]
+        initial_fractions = np.array([p10 / (p10+p01), p01 / (p10+p01)])
+    elif len(TrMat) == 3:
+        p01 = TrMat[0,1]
+        p02 = TrMat[0,2]
+        p10 = TrMat[1,0]
+        p12 = TrMat[1,2]
+        p20 = TrMat[2,0]
+        p21 = TrMat[2,1]
+        F0 = (p10*(p21+p20)+p20*p12)/((p01)*(p12 + p21) + p02*(p10 + p12 + p21) + p01*p20 + p21*p10 + p20*(p10+p12))
+        F1 = (F0*p01 + (1-F0)*p21)/(p10 + p12 + p21)
+        initial_fractions =  np.array([F0, F1, 1-F0-F1])
+    else:
+        '''
+        if more states lets just run the transition process until equilibrium
+        '''
+        A0 = np.ones(len(TrMat))/len(TrMat)
+        k = 0
+        prev_A = A0
+        A = np.dot(A0, TrMat)
+        while not np.all(prev_A == A):
+            k += 1
+            prev_A = A
+            A = np.dot(A, TrMat)
+            if k > 10000000:
+                raise Exception("We could't find a steady state, convergence didn't occur within %s steps, \ncurrent fractions : %s"%(k, A))
+        initial_fractions = A
+    return initial_fractions
+
 def sim_noBias(track_lengths = [7,8,9,10,11], # create arrays of tracks of specified number of localizations  
                track_nb_dist = [1000, 800, 700, 600, 550], # list of number of tracks per array
                LocErr = 0.02, # Localization error in um
