@@ -322,7 +322,12 @@ def Proba_Cs(Cs, LocErr, ds, Fs, TrMat,pBL,isBL, cell_dims, nb_substeps, frame_l
     LP_C = np.log(P_C) + max_LP # back to log proba of C without overflow due to exponential
     return LP_C
 
-def predict_Bs(all_Cs, dt, params, cell_dims, states_nb, frame_len):
+def predict_Bs(all_Cs,
+               dt,
+               params,
+               cell_dims=[1],
+               states_nb=2,
+               frame_len=12):
     '''
     inputs the observed localizations and parameters and determines the proba
     of each localization to be in a given state.
@@ -494,7 +499,7 @@ def get_2DSPT_params(all_Cs,
                      verbose = 1,
                      method = 'powell',
                      steady_state = False,
-                     cell_dims = [0.5], # list of dimensions limit for the field of view (FOV) of the cell in um, a membrane protein in a typical e-coli cell in tirf would have a cell_dims = [0.5,3], in case of cytosolic protein one should imput the depth of the FOV e.g. [0.3] for tirf or [0.8] for hilo
+                     cell_dims = [1], # list of dimensions limit for the field of view (FOV) of the cell in um, a membrane protein in a typical e-coli cell in tirf would have a cell_dims = [0.5,3], in case of cytosolic protein one should imput the depth of the FOV e.g. [0.3] for tirf or [0.8] for hilo
                      vary_params = {'LocErr' : True, 'D0' : True, 'D1' : True, 'F0' : True, 'p01' : True, 'p10' : True, 'pBL' : True},
                      estimated_vals =  {'LocErr' : 0.025, 'D0' : 1e-20, 'D1' : 0.05, 'F0' : 0.45, 'p01' : 0.05, 'p10' : 0.05, 'pBL' : 0.1},
                      min_values = {'LocErr' : 0.007, 'D0' : 1e-12, 'D1' : 0.00001, 'F0' : 0.001, 'p01' : 0.01, 'p10' : 0.01, 'pBL' : 0.01},
