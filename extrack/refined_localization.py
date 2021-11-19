@@ -39,6 +39,9 @@ def prod_3GaussPDF(sigma1,sigma2,sigma3, mu1, mu2, mu3):
     LK = LK + LK2
     return sigma, mu, LK
 
+def gaussian(x, sig, mu):
+    return np.product(1/(2*np.pi*sig**2)**0.5 * np.exp(-(x-mu)**2/(2*sig**2)), -1)
+
 def get_LC_Km_Ks(Cs, LocErr, ds, Fs, TrMat, nb_substeps=1, frame_len = 4):
     '''
     variation of the main function to extract LC, Km and Ks for all positions
