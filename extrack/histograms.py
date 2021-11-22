@@ -303,3 +303,50 @@ def len_hist(all_tracks,params, dt, cell_dims=[0.5,None,None], nb_states=2, nb_s
                 seg_len_hists[:seg_len_hist.shape[0]] = seg_len_hists[:seg_len_hist.shape[0]] + seg_len_hist
 
     return seg_len_hists
+
+
+def gound_truth_hist(all_Bs, states_nb = 2):
+
+    seg_len_hists = np.zeros((all_Bs['60'].shape[1]+1,states_nb))
+    isBL = 0
+    
+    for i, l in enumerate(all_Bs):
+        cur_Bs = all_Bs[l][:,None]
+        if len(cur_Bs)>0:
+            if cur_Bs.shape[-1] == 1 :
+                1#seg_len_hists[0] =  seg_len_hists[0] + np.sum(cur_Bs[:,0] == np.arange(states_nb)[None],0)
+            if 1:
+                nb_Tracks = cur_Bs.shape[0]
+                nb_locs = cur_Bs.shape[2]
+                cur_nb_Bs = len(cur_Bs[0])
+                cur_pos = cur_Bs[:,:,0]
+                cur_seg_len = np.ones((nb_Tracks, cur_nb_Bs))
+                seg_lens = np.zeros((nb_Tracks, cur_nb_Bs, nb_locs+1, states_nb)) # dims : track ID, sequence of states ID, position in the sequence, state of the sequence
+                for k in range(1, nb_locs):
+                    is_Tr = cur_pos != cur_Bs[:,:,k]
+                    cur_seg_len = cur_seg_len + (is_Tr==0).astype(int)
+                    len_before_tr = (cur_seg_len * is_Tr.astype(int))[:,:,None] # cur_seg_len * is_Tr.astype(int)) selects the segments that stops so we can add them, if 0 : not transition if n : transition after n consecutive steps
+                    cat_states = (cur_pos[:,:,None] == np.arange(states_nb)[None,None]).astype(int) # position of the segment in categorcal format so it can fit seg_lens
+                    seg_lens[:,:,k-1] = len_before_tr * cat_states  # add the segment len of the corresponding states 
+                    cur_seg_len[is_Tr] = 1
+                    cur_pos = cur_Bs[:,:,k]
+                
+                last_len = (nb_locs - np.sum(seg_lens, (2,3)))[:,:,None]
+                cat_states = (cur_pos[:,:,None] == np.arange(states_nb)[None,None]).astype(int)
+                seg_lens[:,:,-1] = last_len * cat_states
+                seg_len_hist = np.zeros((nb_locs+isBL, states_nb))
+                
+                for k in range(1, nb_locs+isBL):
+                    #P_seg = (P[:,:,None,None] * np.exp(-LL)[:,:,None,None] * (seg_lens == k).astype(int))
+                    P_seg = (1 * (seg_lens == k).astype(int))
+                    #np.sum(P_seg*np.exp(-LL)[:,:,None,None],(1,2,3))[:,None]==0
+                    #P_seg = np.sum(P_seg, (1,2)) / (np.sum(P_seg,(1,2,3))[:,None]+1e-300) # normalize with regard to the proba of the track without the proba of leaving the FOV (to sum up over different track lengths) 
+                    P_seg = np.sum(P_seg, (0,1,2)) # normalize with regard to the proba of the track without the proba of leaving the FOV (to sum up over different track lengths) 
+                    #P_seg = np.sum(P_seg, (1,2)) / (np.sum(P_seg,(1,2)) +1e-300) # normalize with regard to the proba of the track without the proba of leaving the FOV (to sum up over different track lengths) 
+                    #P_seg = np.sum(P_seg, (1,2))  # normalize with regard to the proba of the track without the proba of leaving the FOV (to sum up over different track lengths) 
+                    seg_len_hist[k-1] = P_seg
+                
+            seg_len_hists[:seg_len_hist.shape[0]] = seg_len_hists[:seg_len_hist.shape[0]] + seg_len_hist
+            
+    return seg_len_hists
+
