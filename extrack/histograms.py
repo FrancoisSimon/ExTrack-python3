@@ -303,7 +303,7 @@ def len_hist(all_tracks,params, dt, cell_dims=[0.5,None,None], nb_states=2, nb_s
     return seg_len_hists
 
 
-def gound_truth_hist(all_Bs, states_nb = 2):
+def ground_truth_hist(all_Bs, states_nb = 2):
 
     seg_len_hists = np.zeros((all_Bs['60'].shape[1]+1,states_nb))
     isBL = 0
