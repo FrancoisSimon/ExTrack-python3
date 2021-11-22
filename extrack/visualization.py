@@ -14,7 +14,7 @@ def visualize_states_durations(all_tracks,
                                steps = False):
     
     len_hists = len_hist(all_tracks, params, dt, cell_dims=cell_dims, nb_states=nb_states, nb_substeps=1, max_nb_states = max_nb_states)
-    
+        
     if steps:
         step_type = 'step'
         dt = 1
@@ -30,7 +30,7 @@ def visualize_states_durations(all_tracks,
     plt.grid()
     plt.xlim([0,min_len*dt])
     plt.ylim([0.001,0.5])
-    plt.xlabel('state duration (%s)'(step_type))
+    plt.xlabel('state duration (%s)'%(step_type))
     plt.ylabel('fraction')
     plt.tight_layout()
 
