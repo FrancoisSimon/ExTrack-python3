@@ -436,7 +436,7 @@ def cum_Proba_Cs(params, all_tracks, dt, cell_dims, nb_states, nb_substeps, fram
     here sum the logs(likelihood) to avoid too big numbers
     '''
     LocErr, ds, Fs, TrMat, pBL = extract_params(params, dt, nb_states, nb_substeps)
-    min_len = np.min(np.array(list(all_tracks.keys())).astype(int))
+    min_len = all_tracks[0].shape[1]
     if np.all(TrMat>0):
         Cum_P = 0
         for k in range(len(all_tracks)):
