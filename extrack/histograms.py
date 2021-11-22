@@ -266,7 +266,7 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5
     
     return LP, cur_Bs, seg_len_hist
 
-def len_hist(all_Cs,params, dt, cell_dims=[0.5,None,None], states_nb=2, nb_substeps=1, max_nb_states = 500):
+def len_hist(all_tracks,params, dt, cell_dims=[0.5,None,None], nb_states=2, nb_substeps=1, max_nb_states = 500):
     '''
     each probability can be multiplied to get a likelihood of the model knowing
     the parameters LocErr, D0 the diff coefficient of state 0 and F0 fraction of
@@ -274,24 +274,24 @@ def len_hist(all_Cs,params, dt, cell_dims=[0.5,None,None], states_nb=2, nb_subst
     state 0 to 1 and p10 the proba of transition from state 1 to 0.
     here sum the logs(likelihood) to avoid too big numbers
     '''
-    LocErr, ds, Fs, TrMat, pBL = extract_params(params, dt, states_nb, nb_substeps)
+    LocErr, ds, Fs, TrMat, pBL = extract_params(params, dt, nb_states, nb_substeps)
 
-    if type(all_Cs) == type({}):
-        new_all_Cs = []
-        for l in all_Cs:
-            new_all_Cs.append(all_Cs[l])
-        all_Cs = new_all_Cs
+    if type(all_tracks) == type({}):
+        new_all_tracks = []
+        for l in all_tracks:
+            new_all_tracks.append(all_tracks[l])
+        all_tracks = new_all_tracks
     
-    #seg_len_hists = np.zeros((all_Cs[-1].shape[1]+1,states_nb))
-    seg_len_hists = np.zeros((all_Cs[-1].shape[1],states_nb))
-    for k in range(len(all_Cs)):
+    #seg_len_hists = np.zeros((all_tracks[-1].shape[1]+1,nb_states))
+    seg_len_hists = np.zeros((all_tracks[-1].shape[1],nb_states))
+    for k in range(len(all_tracks)):
         print(k)
-        if k == len(all_Cs)-1:
+        if k == len(all_tracks)-1:
             isBL = 1 # last position correspond to tracks which didn't disapear within maximum track length
         else:
             isBL = 0
         
-        Css = all_Cs[k]
+        Css = all_tracks[k]
         if len(Css) > 0:
             nb_max = 50
             for n in range(int(np.ceil(len(Css)/nb_max))):
@@ -299,7 +299,7 @@ def len_hist(all_Cs,params, dt, cell_dims=[0.5,None,None], states_nb=2, nb_subst
                 LP, cur_Bs, seg_len_hist  = P_segment_len(Csss, LocErr, ds, Fs, TrMat, pBL=pBL, isBL = isBL, cell_dims = cell_dims, nb_substeps=nb_substeps, max_nb_states = max_nb_states)
                 isBL = 0
                 print(seg_len_hist)
-                #seg_len_hists[:all_Cs[k].shape[1]+isBL] = seg_len_hists[:all_Cs[k].shape[1]+isBL] + seg_len_hist
+                #seg_len_hists[:all_tracks[k].shape[1]+isBL] = seg_len_hists[:all_tracks[k].shape[1]+isBL] + seg_len_hist
                 seg_len_hists[:seg_len_hist.shape[0]] = seg_len_hists[:seg_len_hist.shape[0]] + seg_len_hist
 
     return seg_len_hists
