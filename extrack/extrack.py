@@ -62,7 +62,7 @@ def first_log_integrale_dif(Ci, LocErr, cur_ds):
     Km = Ci
     return Km, Ks
 
-def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5], nb_substeps=1, frame_len = 6, do_preds = 0) :
+def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5], nb_substeps=1, frame_len = 6, do_preds = 0, min_len = 3) :
     '''
     compute the product of the integrals over Ri as previousily described
     work in log space to avoid overflow and underflow
@@ -92,8 +92,6 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
         preds = np.zeros((nb_Tracks, nb_locs, nb_states))-1
     else :
         preds = []
-    
-    min_l = 5
     
     all_Bs = get_all_Bs(np.min([(nb_locs-1)*nb_substeps+1, frame_len + nb_substeps - 1]), nb_states)[None]
     
@@ -160,7 +158,7 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
         # inject the next position to get the associated Km, Ks and Constant describing the integral of 3 normal laws :
         Km, Ks, LC = log_integrale_dif(Cs[:,:,nb_locs-current_step], LocErr, cur_ds, Km, Ks)
         #print('integral',time.time() - t0); t0 = time.time()
-        if current_step >= min_l :
+        if current_step >= min_len :
             LL = Lp_stay[np.argmax(np.all(cur_states[:,None,:,:-1] == sub_Bs[:,:,None],-1),1)] # pick the right proba of staying according to the current states
         else:
             LL = 0
@@ -332,21 +330,19 @@ def predict_Bs(all_tracks,
     inputs the observed localizations and parameters and determines the proba
     of each localization to be in a given state.
     '''
-    if type(all_tracks) == type({}):
-        all_tracks_list = []
-        for l in all_tracks:
-            all_tracks_list.append(all_tracks[l])
-        all_tracks = all_tracks_list
-    
     nb_substeps=1 # substeps should not impact the step labelling
     LocErr, ds, Fs, TrMat, pBL = extract_params(params, dt, nb_states, nb_substeps)
     all_pred_Bs = []
-    for k in range(len(all_tracks)):
+
+    l_list = np.sort(np.array(list(all_tracks.keys())).astype(int)).astype(str)
+    min_len = int(l_list[0])
+    
+    for l in l_list:
         if k<len(all_tracks)-1:
             isBL = 1
         else:
             isBL = 0
-        LP_Cs, trunkated_Bs, pred_Bs = P_Cs_inter_bound_stats(all_tracks[k], LocErr, ds, Fs, TrMat, pBL,isBL, cell_dims, nb_substeps = 1, frame_len = frame_len, do_preds = 1)
+        LP_Cs, trunkated_Bs, pred_Bs = P_Cs_inter_bound_stats(all_tracks[k], LocErr, ds, Fs, TrMat, pBL,isBL, cell_dims, nb_substeps = 1, frame_len = frame_len, do_preds = 1, min_len = min_len)
         all_pred_Bs.append(pred_Bs)
         
     all_pred_Bs_dict = {}
