@@ -298,8 +298,6 @@ def len_hist(all_tracks,params, dt, cell_dims=[0.5,None,None], nb_states=2, nb_s
                 Csss = Css[n*nb_max:(n+1)*nb_max]
                 LP, cur_Bs, seg_len_hist  = P_segment_len(Csss, LocErr, ds, Fs, TrMat, pBL=pBL, isBL = isBL, cell_dims = cell_dims, nb_substeps=nb_substeps, max_nb_states = max_nb_states)
                 isBL = 0
-                #print(seg_len_hist)
-                #seg_len_hists[:all_tracks[k].shape[1]+isBL] = seg_len_hists[:all_tracks[k].shape[1]+isBL] + seg_len_hist
                 seg_len_hists[:seg_len_hist.shape[0]] = seg_len_hists[:seg_len_hist.shape[0]] + seg_len_hist
 
     return seg_len_hists
