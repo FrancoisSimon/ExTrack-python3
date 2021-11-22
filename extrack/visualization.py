@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 from extrack.histograms import len_hist
 from matplotlib import cm
 
-def visualize_states_durations(all_Css,
+def visualize_states_durations(all_tracks,
                                params,
                                dt,
                                cell_dims = [1,None,None],
@@ -13,7 +13,7 @@ def visualize_states_durations(all_Css,
                                min_len = 20,
                                steps = False):
     
-    len_hists = len_hist(all_Css, params, dt, cell_dims=cell_dims, states_nb=states_nb, nb_substeps=1, max_nb_states = max_nb_states)
+    len_hists = len_hist(all_tracks, params, dt, cell_dims=cell_dims, states_nb=states_nb, nb_substeps=1, max_nb_states = max_nb_states)
     
     if step:
         step_type = 'step'
