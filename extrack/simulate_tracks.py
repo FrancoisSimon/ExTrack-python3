@@ -119,6 +119,7 @@ def is_in_FOV(positions, cell_dims):
             inFOV = inFOV*cur_inFOV
     return inFOV
 
+
 def sim_FOV(nb_tracks=10000,
             max_track_len=40, 
             LocErr=0.02,
@@ -146,7 +147,7 @@ def sim_FOV(nb_tracks=10000,
     nb_tracks = 2**np.sum(cell_dims!=None)*nb_tracks
     states = markovian_process(TrSubMat, initial_fractions, nb_tracks, (max_track_len) * nb_sub_steps)
     cell_dims0 = np.copy(cell_dims)   
-    cell_dims0[cell_dims0==None] = 0
+    cell_dims0[cell_dims0==None] = 1
     
     for state in states:
 
@@ -184,7 +185,7 @@ def sim_FOV(nb_tracks=10000,
             arg_add = np.argwhere(np.arange(min_len,max_track_len+1)==len(cur_sub_track))
             
             for a in arg_add:
-                all_Css[a[0]] = all_Css[a[0]] + [cur_sub_track]
+                all_Css[a[0]] = all_Css[a[0]] + [cur_sub_track[:,:2]]
                 all_Bss[a[0]] = all_Bss[a[0]] + [cur_sub_state]
             
             positions = positions[np.argmin(inFOV):]
@@ -194,13 +195,14 @@ def sim_FOV(nb_tracks=10000,
     for k in range(len(all_Css)):
         all_Css[k] = np.array(all_Css[k])
         all_Bss[k] = np.array(all_Bss[k])
-        print(len(all_Css[k]))
+        #print(len(all_Css[k]))
         
     all_Css_dict = {}
     all_Bss_dict = {}
     for Cs, Bs in zip(all_Css, all_Bss):
-        l = str(Cs.shape[1])
-        all_Css_dict[l] = Cs
-        all_Bss_dict[l] = Bs     
+        if Cs.shape[0] >0:
+            l = str(Cs.shape[1])
+            all_Css_dict[l] = Cs
+            all_Bss_dict[l] = Bs     
         
     return all_Css_dict, all_Bss_dict
