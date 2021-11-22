@@ -322,31 +322,31 @@ def Proba_Cs(Cs, LocErr, ds, Fs, TrMat,pBL,isBL, cell_dims, nb_substeps, frame_l
     LP_C = np.log(P_C) + max_LP # back to log proba of C without overflow due to exponential
     return LP_C
 
-def predict_Bs(all_Cs,
+def predict_Bs(all_tracks,
                dt,
                params,
                cell_dims=[1],
-               states_nb=2,
+               nb_states=2,
                frame_len=12):
     '''
     inputs the observed localizations and parameters and determines the proba
     of each localization to be in a given state.
     '''
-    if type(all_Cs) == type({}):
-        all_Cs_list = []
-        for l in all_Cs:
-            all_Cs_list.append(all_Cs[l])
-        all_Cs = all_Cs_list
+    if type(all_tracks) == type({}):
+        all_tracks_list = []
+        for l in all_tracks:
+            all_tracks_list.append(all_tracks[l])
+        all_tracks = all_tracks_list
     
     nb_substeps=1 # substeps should not impact the step labelling
-    LocErr, ds, Fs, TrMat, pBL = extract_params(params, dt, states_nb, nb_substeps)
+    LocErr, ds, Fs, TrMat, pBL = extract_params(params, dt, nb_states, nb_substeps)
     all_pred_Bs = []
-    for k in range(len(all_Cs)):
-        if k<len(all_Cs)-1:
+    for k in range(len(all_tracks)):
+        if k<len(all_tracks)-1:
             isBL = 1
         else:
             isBL = 0
-        LP_Cs, trunkated_Bs, pred_Bs = P_Cs_inter_bound_stats(all_Cs[k], LocErr, ds, Fs, TrMat, pBL,isBL, cell_dims, nb_substeps = 1, frame_len = frame_len, do_preds = 1)
+        LP_Cs, trunkated_Bs, pred_Bs = P_Cs_inter_bound_stats(all_tracks[k], LocErr, ds, Fs, TrMat, pBL,isBL, cell_dims, nb_substeps = 1, frame_len = frame_len, do_preds = 1)
         all_pred_Bs.append(pred_Bs)
         
     all_pred_Bs_dict = {}
@@ -356,14 +356,14 @@ def predict_Bs(all_Cs,
     return all_pred_Bs_dict
 
 '''
-def acc_Bs(all_Cs, dt, params, True_Bs, states_nb, frame_len):
+def acc_Bs(all_tracks, dt, params, True_Bs, nb_states, frame_len):
     """
     inputs the observed localizations, parameters and true palbels to determines
     accuracy of the method to label the states for each localization
     """
     nb_substeps=1 # substeps should not impact the step labelling
-    LocErr, ds, Fs, TrMat = extract_params(params, dt, states_nb, nb_substeps)
-    P_Cs, trunkated_Bs, pred_Bs = P_Cs_inter_bound_stats(all_Cs, LocErr, ds, Fs, TrMat, nb_substeps = 1,frame_len = frame_len, do_preds = 1)
+    LocErr, ds, Fs, TrMat = extract_params(params, dt, nb_states, nb_substeps)
+    P_Cs, trunkated_Bs, pred_Bs = P_Cs_inter_bound_stats(all_tracks, LocErr, ds, Fs, TrMat, nb_substeps = 1,frame_len = frame_len, do_preds = 1)
     True_Bs = cp.array(True_Bs)
     pred_Bs = np.argmax(pred_Bs, axis = 2)
     accuracy = cp.mean(pred_Bs==True_Bs, axis=0)
@@ -372,14 +372,14 @@ def acc_Bs(all_Cs, dt, params, True_Bs, states_nb, frame_len):
     return accuracy
 '''
 
-def extract_params(params, dt, states_nb, nb_substeps):
+def extract_params(params, dt, nb_states, nb_substeps):
     '''
     turn the parameters which differ deppending on the number of states into lists
     ds (diffusion lengths), Fs (fractions), TrMat (substep transiton matrix)
     '''
     LocErr = params['LocErr'].value
     
-    if states_nb == 2:
+    if nb_states == 2:
         D0 = params['D0'].value
         D1 = params['D1'].value
         Ds = np.array([D0,D1])
@@ -397,7 +397,7 @@ def extract_params(params, dt, states_nb, nb_substeps):
         
         TrMat = np.array([[1-p01, p01],[p10, 1- p10]])
     
-    elif states_nb == 3:
+    elif nb_states == 3:
         D0 = params['D0'].value
         D1 = params['D1'].value
         D2 = params['D2'].value
@@ -448,7 +448,7 @@ def extract_params(params, dt, states_nb, nb_substeps):
     ds = np.sqrt(2*Ds*dt)
     return LocErr, ds, Fs, TrMat, pBL
 
-def cum_Proba_Cs(params, all_Cs, dt, cell_dims, states_nb, nb_substeps, frame_len, verbose = 1):
+def cum_Proba_Cs(params, all_tracks, dt, cell_dims, nb_states, nb_substeps, frame_len, verbose = 1):
     '''
     each probability can be multiplied to get a likelihood of the model knowing
     the parameters LocErr, D0 the diff coefficient of state 0 and F0 fraction of
@@ -456,15 +456,15 @@ def cum_Proba_Cs(params, all_Cs, dt, cell_dims, states_nb, nb_substeps, frame_le
     state 0 to 1 and p10 the proba of transition from state 1 to 0.
     here sum the logs(likelihood) to avoid too big numbers
     '''
-    LocErr, ds, Fs, TrMat, pBL = extract_params(params, dt, states_nb, nb_substeps)
+    LocErr, ds, Fs, TrMat, pBL = extract_params(params, dt, nb_states, nb_substeps)
     if np.all(TrMat>0):
         Cum_P = 0
-        for k in range(len(all_Cs)):
-            if k == len(all_Cs)-1:
+        for k in range(len(all_tracks)):
+            if k == len(all_tracks)-1:
                 isBL = 0 # last position correspond to tracks which didn't disapear within maximum track length
             else:
                 isBL = 1
-            Css = all_Cs[k]
+            Css = all_tracks[k]
             nb_max = 700
             for n in range(int(np.ceil(len(Css)/nb_max))):
                 Csss = Css[n*nb_max:(n+1)*nb_max]
@@ -479,9 +479,9 @@ def cum_Proba_Cs(params, all_Cs, dt, cell_dims, states_nb, nb_substeps, frame_le
         if verbose == 1:
             q = [param + ' = ' + str(np.round(params[param].value, 4)) for param in params]
             print(Cum_P, q)
-        #nb_locs = [Cs.shape[0]*Cs.shape[1] for Cs in all_Cs]
+        #nb_locs = [Cs.shape[0]*Cs.shape[1] for Cs in all_tracks]
         #nb_locs = np.sum(nb_locs)
-        #out = - np.exp(Cum_P/len(all_Cs)/(len(all_Cs[0])-1)) # normalize by the number of tracks and number of displacements
+        #out = - np.exp(Cum_P/len(all_tracks)/(len(all_tracks[0])-1)) # normalize by the number of tracks and number of displacements
         out = - Cum_P # normalize by the number of tracks and number of displacements
     else:
         out = 1e100
@@ -491,10 +491,10 @@ def cum_Proba_Cs(params, all_Cs, dt, cell_dims, states_nb, nb_substeps, frame_le
         print('inputs give nans')
     return out
 
-def get_2DSPT_params(all_Cs,
+def get_2DSPT_params(all_tracks,
                      dt,
                      nb_substeps = 1,
-                     states_nb = 2,
+                     nb_states = 2,
                      frame_len = 8,
                      verbose = 1,
                      method = 'powell',
@@ -505,13 +505,13 @@ def get_2DSPT_params(all_Cs,
                      min_values = {'LocErr' : 0.007, 'D0' : 1e-12, 'D1' : 0.00001, 'F0' : 0.001, 'p01' : 0.01, 'p10' : 0.01, 'pBL' : 0.01},
                      max_values = {'LocErr' : 0.6, 'D0' : 1, 'D1' : 10, 'F0' : 0.999, 'p01' : 1., 'p10' : 1., 'pBL' : 0.99}):
     '''
-    all_Cs : list of 3D arrays of tracks, dim 0 = track ID, dim 1 = sequence of positions, dim 2 = x, y, (z) axes
+    all_tracks : list of 3D arrays of tracks, dim 0 = track ID, dim 1 = sequence of positions, dim 2 = x, y, (z) axes
     estimated_vals : list of parameters [LocError, D0, D1, F0, p01, p10] if 2 states,
     [LocError, D0, D1, F0, F1, p01, p02, p10, p12, p20, p21] if 3 states.
     dt : time in between each frame
     verbose : if 1 returns the parameter values and log likelihood for each step of the fit, if 0 return nothing 
     nb_substeps : nb of substeps per step (1 = no substeps)
-    states_nb : number of states in the model
+    nb_states : number of states in the model
     method : lmfit optimization method
     vary_params = list of bool stating if the method varies each parameters in the same order than in estimated_vals
     steady_state : bool stating if assuming stady state or not (constrains rates and Fractions to 2 free params for a 2 states model or 6 for a 3 states model)
@@ -529,10 +529,10 @@ def get_2DSPT_params(all_Cs,
     min_values = {'LocErr' : 0.005, 'D0' : 0, 'D1' : 0, 'D2' :  0.001, 'D3' : 0.001, 'F0' : 0.001,  'F1' : 0.001, 'F2' : 0.001, 'p01' : 0.001, 'p02' : 0.001, 'p03' : 0.001, 'p10' :0.001, 'p12' : 0.001, 'p13' : 0.001, 'p20' :0.001, 'p21' :0.001, 'p23' : 0.001, 'p30' :0.001, 'p31' :0.001, 'p32' : 0.001, 'pBL' : 0.001}
     max_values = {'LocErr' : 0.023, 'D0' : 1, 'D1' : 1, 'D2' :  10, 'D3' : 100, 'F0' : 0.999,  'F1' : 0.999, 'F2' : 0.999, 'p01' : 1, 'p02' : 1, 'p03' : 1, 'p10' :1, 'p12' : 1, 'p13' : 1, 'p20' : 1, 'p21' : 1, 'p23' : 1, 'p30' : 1, 'p31' : 1, 'p32' : 1, 'pBL' : 0.99}
     '''
-    if states_nb == 2:
+    if nb_states == 2:
         if not (len(min_values) == 7 and len(max_values) == 7 and len(estimated_vals) == 7 and len(vary_params) == 7):
             raise ValueError('estimated_vals, min_values, max_values and vary_params should all containing 7 parameters')
-    elif states_nb == 3:
+    elif nb_states == 3:
         if len(vary_params) == 7:
             vary_params = {'LocErr' : True, 'D0' : True, 'D1' :  True, 'D2' : True, 'F0' : True, 'F1' : True, 'p01' : True, 'p02' : True, 'p10' : True,'p12' :  True,'p20' :  True, 'p21' : True, 'pBL' : True},
         if len(estimated_vals) == 7:
@@ -541,7 +541,7 @@ def get_2DSPT_params(all_Cs,
             min_values = {'LocErr' : 0.007, 'D0' : 1e-20, 'D1' : 0.0000001, 'D2' :  0.000001, 'F0' : 0.001,  'F1' : 0.001, 'p01' : 0.001, 'p02' : 0.001, 'p10' :0.001, 'p12' : 0.001, 'p20' :0.001, 'p21' :0.001, 'pBL' : 0.001},
         if len(max_values) == 7:
             max_values = {'LocErr' : 0.023, 'D0' : 1, 'D1' : 1, 'D2' :  10, 'D3' : 100, 'F0' : 0.999,  'F1' : 0.999, 'F2' : 0.999, 'p01' : 1, 'p02' : 1, 'p03' : 1, 'p10' :1, 'p12' : 1, 'p13' : 1, 'p20' : 1, 'p21' : 1, 'p23' : 1, 'p30' : 1, 'p31' : 1, 'p32' : 1, 'pBL' : 0.99}
-    elif states_nb == 4:
+    elif nb_states == 4:
         if len(vary_params) == 7:
             vary_params = {'LocErr' : True, 'D0' : True, 'D1' : True, 'D2' :  True, 'D3' : True, 'F0' : True,  'F1' : True, 'F2' : True, 'p01' : True, 'p02' : True, 'p03' : True, 'p10' : True, 'p12' : True, 'p13' : True, 'p20' :True, 'p21' :True, 'p23' : True, 'p30' :True, 'p31' :True, 'p32' : True, 'pBL' : True}
         if len(estimated_vals) == 7:
@@ -553,15 +553,17 @@ def get_2DSPT_params(all_Cs,
     else:
         if len(vary_params) == 7 or len(estimated_vals) == 7 or len(min_values) == 7 or len(max_values) == 7:
             raise ValueError('vary_params, estimated_vals, min_values and max_values have to be correctly specified if more than 4 states')
-            
-    if str(all_Cs.__class__) == "<class 'dict'>" or str(all_Cs.__class__) == "<class 'list'>"
-    if not str(all_Cs.__class__) == "<class 'dict'>":
-        all_Cs_list = []
-        for l in all_Cs:
-            all_Cs_list.append(all_Cs[l])
-        all_Cs = all_Cs_list
-
-    if  states_nb == 2:
+    
+    if not str(all_tracks.__class__) == "<class 'dict'>":
+        raise ValueError('all_tracks should be a dictionary of arrays with nthere number of steps as keys')
+    
+    l_list = np.sort(np.array(list(all_tracks.keys())).astype(int)).astype(str)
+    sorted_tracks = []
+    for l in l_list:
+        sorted_tracks.append(all_tracks[l])
+    all_tracks = sorted_tracks
+    
+    if  nb_states == 2:
         if steady_state:
             print(estimated_vals)
             param_kwargs = [{'name' : 'D0', 'value' : estimated_vals['D0'], 'min' : min_values['D0'], 'max' : max_values['D0'], 'vary' : vary_params['D0']},
@@ -582,7 +584,7 @@ def get_2DSPT_params(all_Cs,
                             {'name' : 'p10', 'value' : estimated_vals['p10'], 'min' :  min_values['p10'], 'max' :  max_values['p10'], 'vary' : vary_params['p10']},
                             {'name' : 'pBL', 'value' : estimated_vals['pBL'], 'min' :  min_values['pBL'], 'max' :  max_values['pBL'], 'vary' : vary_params['pBL']}]
 
-    elif states_nb == 3:
+    elif nb_states == 3:
         '''
         e.g. :
         vary_params = { 'LocErr' : True, 'D0' : False, 'D1' :  True, 'D2' : True, 'F0' : True, 'F1' : True, 'p01' : True, 'p02' : True, 'p10' : True,'p12' :  True,'p20' :  True, 'p21' : True}
@@ -662,6 +664,7 @@ def get_2DSPT_params(all_Cs,
     params = Parameters()
     [params.add(**param_kwargs[k]) for k in range(len(param_kwargs))]
     #print(params)
-    fit = minimize(cum_Proba_Cs, params, args=(all_Cs, dt, cell_dims, states_nb, nb_substeps, frame_len, verbose), method = method, nan_policy = 'propagate')
+    fit = minimize(cum_Proba_Cs, params, args=(all_tracks, dt, cell_dims, nb_states, nb_substeps, frame_len, verbose), method = method, nan_policy = 'propagate')
     return fit
+
 
