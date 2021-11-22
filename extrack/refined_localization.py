@@ -451,13 +451,13 @@ def get_global_sigs_mus(all_pos_means, all_pos_stds, all_pos_weights, idx = 0):
         w_mus.append(np.sum(np.exp(LC[:,None]) * mus,0) / np.sum(np.exp(LC[:,None]),0))
     return np.array(w_mus), np.array(w_sigs)
 
-def full_extrack_2_matrix(all_Css, params, dt, all_frames = None, cell_dims = [1,None,None], states_nb = 2, frame_len = 15):
-    nb_dims = list(all_Css.items())[0][1].shape[2]
-    pred_Bss = predict_Bs(all_Css, dt, params, states_nb=states_nb, frame_len=frame_len, cell_dims = cell_dims)
+def full_extrack_2_matrix(all_tracks, params, dt, all_frames = None, cell_dims = [1,None,None], nb_states = 2, frame_len = 15):
+    nb_dims = list(all_tracks.items())[0][1].shape[2]
+    pred_Bss = predict_Bs(all_tracks, dt, params, nb_states=nb_states, frame_len=frame_len, cell_dims = cell_dims)
     
-    DATA = extrack_2_matrix(all_Css, pred_Bss, dt, all_frames = all_frames)
+    DATA = extrack_2_matrix(all_tracks, pred_Bss, dt, all_frames = all_frames)
     DATA = np.concatenate((DATA, np.empty((DATA.shape[0], nb_dims+1))),1)
-    LocErr, ds, Fs, TrMat = extract_params(params, dt, states_nb, nb_substeps = 1)
+    LocErr, ds, Fs, TrMat = extract_params(params, dt, nb_states, nb_substeps = 1)
     for ID in np.unique(DATA[:,2]):
         track = DATA[DATA[:,2]==ID,:nb_dims][None]
         all_pos_means, all_pos_stds, all_pos_weights, all_pos_Bs = get_pos_PDF(track, LocErr, ds, Fs, TrMat, frame_len = frame_len//2+3)
@@ -477,8 +477,8 @@ def get_best_estimates(Cs, LocErr, ds, Fs, TrMat, frame_len = 10):
     all_sigs.append(sigs)
     return mus, sigs
 
-def do_gifs_from_params(all_Cs, params, dt, gif_pathnames = './tracks', frame_len = 9, states_nb = 2, nb_pix = 200, fps = 1):
-    for Cs in all_Cs:
-        LocErr, ds, Fs, TrMat = extract_params(params, dt, states_nb, nb_substeps = 1)
+def do_gifs_from_params(all_tracks, params, dt, gif_pathnames = './tracks', frame_len = 9, nb_states = 2, nb_pix = 200, fps = 1):
+    for Cs in all_tracks:
+        LocErr, ds, Fs, TrMat = extract_params(params, dt, nb_states, nb_substeps = 1)
         all_pos_means, all_pos_stds, all_pos_weights, all_pos_Bs = get_pos_PDF(Cs, LocErr, ds, Fs, TrMat, frame_len = frame_len)
         save_gifs(Cs, all_pos_means, all_pos_stds, all_pos_weights, all_pos_Bs, gif_pathnames = gif_pathnames + '_' + str(len(Cs[0])) + '_pos', lim = None, nb_pix = nb_pix, fps=fps)    
