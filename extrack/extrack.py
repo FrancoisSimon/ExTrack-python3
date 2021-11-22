@@ -162,8 +162,7 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
             LL = Lp_stay[np.argmax(np.all(cur_states[:,None,:,:-1] == sub_Bs[:,:,None],-1),1)] # pick the right proba of staying according to the current states
         else:
             LL = 0
-            
-            
+        
         LP += LT + LC + LL # current (log) constants associated with each track and sequences of states
         del LT, LC
         cur_nb_Bs = len(cur_Bs[0]) # current number of sequences of states
@@ -301,7 +300,7 @@ def get_Ts_from_Bs(all_Bs, TrMat):
         LT += cp.log(TrMat[all_Bs[:,:,k], all_Bs[:,:,k+1]])
     return LT
 
-def Proba_Cs(Cs, LocErr, ds, Fs, TrMat,pBL,isBL, cell_dims, nb_substeps, frame_len):
+def Proba_Cs(Cs, LocErr, ds, Fs, TrMat,pBL,isBL, cell_dims, nb_substeps, frame_len, min_len):
     '''
     inputs the observed localizations and determine the probability of 
     observing these data knowing the localization error, D the diffusion coef,
@@ -310,7 +309,7 @@ def Proba_Cs(Cs, LocErr, ds, Fs, TrMat,pBL,isBL, cell_dims, nb_substeps, frame_l
     over all Bs to get the proba of Cs (knowing the initial position c0)
     '''
 
-    LP_CB, _, _  = P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL,isBL,cell_dims, nb_substeps, frame_len, 0)
+    LP_CB, _, _  = P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL,isBL,cell_dims, nb_substeps, frame_len, do_preds = 0,  min_len = min_len)
     # calculates P(C) the sum of P(C inter B) for each track
     max_LP = np.max(LP_CB, axis = 1, keepdims = True)
     LP_CB = LP_CB - max_LP
@@ -351,23 +350,6 @@ def predict_Bs(all_tracks,
         all_pred_Bs_dict[str(pred_Bs.shape[1])] = pred_Bs
 
     return all_pred_Bs_dict
-
-'''
-def acc_Bs(all_tracks, dt, params, True_Bs, nb_states, frame_len):
-    """
-    inputs the observed localizations, parameters and true palbels to determines
-    accuracy of the method to label the states for each localization
-    """
-    nb_substeps=1 # substeps should not impact the step labelling
-    LocErr, ds, Fs, TrMat = extract_params(params, dt, nb_states, nb_substeps)
-    P_Cs, trunkated_Bs, pred_Bs = P_Cs_inter_bound_stats(all_tracks, LocErr, ds, Fs, TrMat, nb_substeps = 1,frame_len = frame_len, do_preds = 1)
-    True_Bs = cp.array(True_Bs)
-    pred_Bs = np.argmax(pred_Bs, axis = 2)
-    accuracy = cp.mean(pred_Bs==True_Bs, axis=0)
-    accuracy = asnumpy(accuracy)
-    print('accuracy :', accuracy)
-    return accuracy
-'''
 
 def extract_params(params, dt, nb_states, nb_substeps):
     '''
@@ -454,6 +436,7 @@ def cum_Proba_Cs(params, all_tracks, dt, cell_dims, nb_states, nb_substeps, fram
     here sum the logs(likelihood) to avoid too big numbers
     '''
     LocErr, ds, Fs, TrMat, pBL = extract_params(params, dt, nb_states, nb_substeps)
+    min_len = np.min(np.array(list(all_tracks.keys())).astype(int))
     if np.all(TrMat>0):
         Cum_P = 0
         for k in range(len(all_tracks)):
@@ -465,7 +448,7 @@ def cum_Proba_Cs(params, all_tracks, dt, cell_dims, nb_states, nb_substeps, fram
             nb_max = 700
             for n in range(int(np.ceil(len(Css)/nb_max))):
                 Csss = Css[n*nb_max:(n+1)*nb_max]
-                LP = Proba_Cs(Csss, LocErr, ds, Fs, TrMat,pBL, isBL,cell_dims, nb_substeps, frame_len)
+                LP = Proba_Cs(Csss, LocErr, ds, Fs, TrMat,pBL, isBL,cell_dims, nb_substeps, frame_len, min_len)
                 #plt.clf()
                 #plt.hist(np.log(Ps), np.arange(-5,50, 0.5), density = True)
                 #plt.hist(Ps, np.arange(0,np.exp(18), np.exp(18)/200), density = True)
