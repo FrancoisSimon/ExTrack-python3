@@ -336,9 +336,10 @@ def predict_Bs(all_tracks,
 
     l_list = np.sort(np.array(list(all_tracks.keys())).astype(int)).astype(str)
     min_len = int(l_list[0])
+    max_len = int(l_list[-1])
     
     for l in l_list:
-        if k<len(all_tracks)-1:
+        if int(l) == max_len:
             isBL = 1
         else:
             isBL = 0
