@@ -7,15 +7,15 @@ def visualize_states_durations(all_tracks,
                                params,
                                dt,
                                cell_dims = [1,None,None],
-                               states_nb = 2,
+                               nb_states = 2,
                                max_nb_states = 500,
                                long_tracks = True,
                                min_len = 20,
                                steps = False):
     
-    len_hists = len_hist(all_tracks, params, dt, cell_dims=cell_dims, states_nb=states_nb, nb_substeps=1, max_nb_states = max_nb_states)
+    len_hists = len_hist(all_tracks, params, dt, cell_dims=cell_dims, nb_states=nb_states, nb_substeps=1, max_nb_states = max_nb_states)
     
-    if step:
+    if steps:
         step_type = 'step'
         dt = 1
     else:
@@ -61,8 +61,7 @@ def visualize_tracks(DATA,
 def plot_tracks(DATA,
                 max_track_length = 50,
                 fig_dims = [5,5],
-                lim = 0.4
-                ):
+                lim = 0.4 ):
     
     nb_states = 0
     for param in list(DATA.keys()):
