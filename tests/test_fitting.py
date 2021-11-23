@@ -1,23 +1,101 @@
-from extrack.simulate_tracks import get_tracks
 
-track_lengths = [7,8,9,10,11] # create arrays of tracks of specified number of localizations  
-track_nb_dist = [1000, 800, 700, 600, 550] # list of number of tracks per array
-LocErr = 0.02 # Localization error in um
-Ds = [0, 0.1] # diffusion coef of each state in um^2/s
-TrMat = np.array([[0.9,0.1], [0.2,0.8]]) # transition matrix e.g. np.array([[1-p01,p01], [p10,1-p10]])
-initial_fractions = None # fraction in each states at the beginning of the tracks, if None assums steady state determined by TrMat
-dt = 0.02 # time in between positions in s
-nb_dims = 2 # number of spatial dimensions : 2 for (x,y) and 3 for (x,y,z)
+import extrack
+import numpy as np
+from matplotlib import pyplot as plt
 
-all_Css, all_Bss = get_tracks(track_lengths = track_lengths,
-                              track_nb_dist = track_nb_dist,
-                              LocErr = LocErr,
-                              Ds = Ds,
-                              TrMat = TrMat,
-                              initial_fractions = initial_fractions, 
-                              dt = dt,
-                              nb_dims = nb_dims)
+dir(extrack)
 
-model_fit, preds = auto_fitting_2states(all_Css,dt)
+dt = 0.025
 
-model_fit.params
+# simulate tracks able to come and leave from the field of view :
+
+all_tracks, all_Bs = extrack.simulate_tracks.sim_FOV(nb_tracks=40000,
+                                                     max_track_len=60,
+                                                     LocErr=0.02,
+                                                     Ds = np.array([0,0.5]),
+                                                     initial_fractions = np.array([0.6,0.4]),
+                                                     TrMat = np.array([[0.9,0.1],[0.1,0.9]]),
+                                                     dt = dt,
+                                                     pBL = 0.1,
+                                                     cell_dims = [1,None,None], # dimension limits in x, y and z respectively
+                                                     min_len = 5)
+
+# fit parameters of the simulated tracks :
+
+model_fit = extrack.tracking.get_2DSPT_params(all_tracks,
+                                              dt,
+                                              cell_dims = [1],
+                                              nb_substeps = 1,
+                                              nb_states = 2,
+                                              frame_len = 6,
+                                              verbose = 1,
+                                              method = 'powell',
+                                              steady_state = False,
+                                              vary_params = {'LocErr' : False, 'D0' : False, 'D1' : True, 'F0' : False, 'p01' : True, 'p10' : True, 'pBL' : True},
+                                              estimated_vals = {'LocErr' : 0.020, 'D0' : 0, 'D1' : 0.5, 'F0' : 0.6, 'p01' : 0.1, 'p10' : 0.1, 'pBL' : 0.1})
+
+# produce histograms of time spent in each state :
+
+extrack.visualization.visualize_states_durations(all_tracks,
+                                                 model_fit.params,
+                                                 dt,
+                                                 cell_dims = [1],
+                                                 nb_states = 2,
+                                                 max_nb_states = 400,
+                                                 long_tracks = True,
+                                                 nb_steps_lim = 20,
+                                                 steps = False)
+
+# ground truth histogram (actual labeling from simulations) :
+    
+seg_len_hists = extrack.histograms.ground_truth_hist(all_Bs,long_tracks = True,nb_steps_lim = 20)
+
+plt.plot(np.arange(1,len(seg_len_hists)+1)[:,None]*dt, seg_len_hists/np.sum(seg_len_hists,0), ':')
+
+# assesment of the slops of the histograms :
+
+np.polyfit(np.arange(1,len(seg_len_hists))[3:15], np.log(seg_len_hists[3:15])[:,0], 1)
+np.polyfit(np.arange(1,len(seg_len_hists))[3:15], np.log(seg_len_hists[3:15])[:,1], 1)
+
+# NB : the slops do not exactly correspond to the transition rates as leaving the field of view biases the dataset but the decay is still linear
+
+# simulation of fiewer tracks to plot them and their annotation infered by ExTrack :
+
+all_tracks, all_Bs = extrack.simulate_tracks.sim_FOV(nb_tracks=500,
+                                                     max_track_len=60,
+                                                     LocErr=0.02,
+                                                     Ds = np.array([0,0.5]),
+                                                     initial_fractions = np.array([0.6,0.4]),
+                                                     TrMat = np.array([[0.9,0.1],[0.1,0.9]]),
+                                                     dt = dt,
+                                                     pBL = 0.1,
+                                                     cell_dims = [1,], # dimension limits in x, y and z respectively
+                                                     min_len = 11)
+
+# performs the states probability predictions based on the most likely parameters :
+
+pred_Bs = extrack.tracking.predict_Bs(all_tracks,
+                                     dt,
+                                     model_fit.params,
+                                     cell_dims=[1],
+                                     nb_states=2,
+                                     frame_len=12)
+
+# turn outputs from extrack to a more classical data frame format :
+    
+DATA = extrack.exporters.extrack_2_pandas(all_tracks, pred_Bs, frames = None, opt_metrics = {})
+
+# show all tracks :
+
+extrack.visualization.visualize_tracks(DATA,
+                                       track_length_range = [10,np.inf],
+                                       figsize = (5,10))
+
+# show the longest tracks in more details :
+
+extrack.visualization.plot_tracks(DATA,
+                                  max_track_length = 50, 
+                                  nb_subplots = [5,5],
+                                  figsize = (10,10), 
+                                  lim = 1)
+
