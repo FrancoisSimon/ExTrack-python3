@@ -28,7 +28,7 @@ def visualize_states_durations(all_tracks,
     plt.legend()
     plt.yscale('log')
     plt.grid()
-    plt.xlim([0,min_len*dt])
+    plt.xlim([0,nb_steps_lim*dt])
     plt.ylim([0.001,0.5])
     plt.xlabel('state duration (%s)'%(step_type))
     plt.ylabel('fraction')
