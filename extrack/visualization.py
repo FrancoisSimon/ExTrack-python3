@@ -62,6 +62,7 @@ def visualize_tracks(DATA,
 
 def plot_tracks(DATA,
                 max_track_length = 50,
+                nb_subplots = [5,5],
                 figsize = (10,10),
                 lim = 0.4 ):
     
@@ -77,8 +78,8 @@ def plot_tracks(DATA,
         if len(track) > max_track_length:
             DATA.drop((DATA[DATA['track_ID'] == ID]).index, inplace=True)
     
-    for k, ID in enumerate(np.unique(DATA['track_ID'])[::-1][:np.product(fig_dims)]):
-        plt.subplot(fig_dims[0], fig_dims[1], k+1)
+    for k, ID in enumerate(np.unique(DATA['track_ID'])[::-1][:np.product(nb_subplots)]):
+        plt.subplot(nb_subplots[0], nb_subplots[1], k+1)
         print(ID)
         track = DATA[DATA['track_ID'] ==ID ]
         if nb_states == 2 :
@@ -88,10 +89,11 @@ def plot_tracks(DATA,
             pred = track[['pred_2', 'pred_1', 'pred_0']].values
         
         plt.plot(track['X'], track['Y'], 'k:', alpha = 0.2)
-        plt.scatter(track['X'], track['Y'], c = pred, s=5)
+        plt.scatter(track['X'], track['Y'], c = pred, s=3)
         plt.xlim([np.mean(track['X']) - lim, np.mean(track['X']) + lim])
         plt.ylim([np.mean(track['Y']) - lim, np.mean(track['Y']) + lim])
         plt.gca().set_aspect('equal', adjustable='box')
         plt.yticks(fontsize = 6)
         plt.xticks(fontsize = 6)
     plt.tight_layout(h_pad = 1, w_pad = 1)
+
