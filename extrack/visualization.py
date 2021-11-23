@@ -62,7 +62,7 @@ def visualize_tracks(DATA,
 
 def plot_tracks(DATA,
                 max_track_length = 50,
-                fig_dims = [5,5],
+                figsize = (10,10),
                 lim = 0.4 ):
     
     nb_states = 0
@@ -70,7 +70,7 @@ def plot_tracks(DATA,
         if param.find('pred')+1:
             nb_states += 1
     
-    plt.figure(figsize=(10,10))
+    plt.figure(figsize=figsize)
     
     for ID in np.unique(DATA['track_ID'])[::-1]:
         track = DATA[DATA['track_ID'] ==ID]
