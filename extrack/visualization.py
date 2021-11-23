@@ -35,14 +35,15 @@ def visualize_states_durations(all_tracks,
     plt.tight_layout()
 
 def visualize_tracks(DATA,
-                     track_length_range = [10,np.inf]):
+                     track_length_range = [10,np.inf],
+                     figsize = (5,5)):
     
     nb_states = 0
     for param in list(DATA.keys()):
         if param.find('pred')+1:
             nb_states += 1
     
-    plt.figure()
+    plt.figure(figsize = figsize)
     DATA['X']
     for ID in np.unique(DATA['track_ID'])[::-1]:
         print(ID)
@@ -55,7 +56,8 @@ def visualize_tracks(DATA,
                 pred = track[['pred_2', 'pred_1', 'pred_0']].values
             
             plt.plot(track['X'], track['Y'], 'k:', alpha = 0.2)
-            plt.scatter(track['X'], track['Y'], c = pred, s=5)
+            plt.scatter(track['X'], track['Y'], c = pred, s=3)
+            plt.gca().set_aspect('equal', adjustable='datalim')
             #plt.scatter(track['X'], track['X'], marker = 'x', c='k', s=5, alpha = 0.5)
 
 def plot_tracks(DATA,
