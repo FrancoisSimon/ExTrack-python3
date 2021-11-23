@@ -10,7 +10,7 @@ def visualize_states_durations(all_tracks,
                                nb_states = 2,
                                max_nb_states = 500,
                                long_tracks = True,
-                               min_len = 20,
+                               nb_steps_lim = 20,
                                steps = False):
     
     len_hists = len_hist(all_tracks, params, dt, cell_dims=cell_dims, nb_states=nb_states, nb_substeps=1, max_nb_states = max_nb_states)
