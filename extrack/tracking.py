@@ -93,6 +93,9 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
     else :
         preds = []
     
+    if nb_locs < 2:
+        raise ValueError('minimal track length = 2, here track length = %s'%nb_locs)
+    
     all_Bs = get_all_Bs(np.min([(nb_locs-1)*nb_substeps+1, frame_len + nb_substeps - 1]), nb_states)[None]
     
     TrMat = cp.array(TrMat.T)
