@@ -99,3 +99,36 @@ extrack.visualization.plot_tracks(DATA,
                                   figsize = (10,10), 
                                   lim = 1)
 
+
+# download tracks from csv file :
+path = '/home/oem/Downloads/tracks.csv'
+all_tracks, frames, opt_metrics = extrack.readers.read_table(path,
+                                                             opt_colnames=['QUALITY', 'RADIUS'])
+
+# download tracks from xml file (trackmate format) :
+path = '/home/oem/Downloads/tracks.csv'
+all_tracks, frames, opt_metrics = extrack.readers.read_trackmate_xml(path,
+                                                                     opt_metrics_names=[]) # opt_metrics_names corresponds to a list of the metrics the user wants to get from the detections lines in the xml file
+
+# predict states :
+
+pred_Bs = extrack.tracking.predict_Bs(all_tracks,
+                                      dt,
+                                      model_fit.params,
+                                      cell_dims=[1],
+                                      nb_states=2,
+                                      frame_len=12)
+
+# save as xml file used for trackmate :
+
+save_path = './tracks.xml' 
+extrack.exporters.save_extrack_2_xml(all_tracks, pred_Bs, model_fit.params, save_path, dt, all_frames = None, opt_metrics = opt_metrics)
+
+DATA = extrack.exporters.extrack_2_pandas(all_tracks, pred_Bs, frames = None, opt_metrics = opt_metrics)
+
+# save as csv file :
+save_path = './tracks.csv'
+DATA.to_csv(save_path)
+
+
+
