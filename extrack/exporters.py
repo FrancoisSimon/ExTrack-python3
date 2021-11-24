@@ -123,11 +123,11 @@ def save_pred_2_CSV(path, all_Css, pred_Bss, dt, all_frames = None):
                     preds_str = preds_str_fmt%(tuple(p))
                     f.write('%s,%s,%s,%s,%s,%s%s\n'%(track_ID, p[0], p[1], 0.0, dt* frame*1000, frame, preds_str))
 
-def save_pred_2_xml(all_Css, pred_Bss, params, path, dt, all_frames = None, opt_metrics = {}):
+def save_extrack_2_xml(all_tracks, pred_Bss, params, path, dt, frames = None, opt_metrics = {}):
     track_ID = 0
-    for len_ID in all_Css:
-       all_Cs = all_Css[len_ID]
-       track_ID += len(all_Cs)
+    for len_ID in all_tracks:
+       tracks = all_tracks[len_ID]
+       track_ID += len(tracks)
     
     final_params = []
     for param in params:
@@ -146,24 +146,24 @@ def save_pred_2_xml(all_Css, pred_Bss, params, path, dt, all_frames = None, opt_
     opt_metrics_fmt = ''
     
     for m in opt_metrics:
-        opt_metrics_fmt = opt_metrics_fmt + '%s="%s "'%(m,'%s')
+        opt_metrics_fmt = opt_metrics_fmt + '%s="%s" '%(m,'%s')
     
     track_ID = 0
     with open(path, 'w') as f:
         f.write('<?xml version="1.0" encoding="UTF-8"?>\n<Tracks nTracks="%s" spaceUnits="µm" frameInterval="%s" timeUnits="ms" %s>\n'%(track_ID, dt, Extrack_headers))
-    
-        for len_ID in all_Css:
-            all_Cs = all_Css[len_ID]
+        
+        for len_ID in all_tracks:
+            tracks = all_tracks[len_ID]
             pred_Bs = pred_Bss[len_ID]
-            opt_met = np.empty((all_Cs.shape[0],all_Cs.shape[1],len(opt_metrics)))
+            opt_met = np.empty((tracks.shape[0],tracks.shape[1],len(opt_metrics)))
             for i, m in enumerate(opt_metrics):
                 opt_met[:,:,i] = opt_metrics[m][len_ID]
             opt_met.shape
-            if all_frames != None:
-                all_frame = all_frames[len_ID]
+            if frames != None:
+                frames = frames[len_ID]
             else:
-                all_frame = np.arange(all_Cs.shape[0]*all_Cs.shape[1]).reshape((all_Cs.shape[0],all_Cs.shape[1])) 
-            for i, (track, preds, frames) in enumerate(zip(all_Cs, pred_Bs, all_frame)):
+                all_frame = np.arange(tracks.shape[0]*tracks.shape[1]).reshape((tracks.shape[0],tracks.shape[1])) 
+            for i, (track, preds, frames) in enumerate(zip(tracks, pred_Bs, all_frame)):
                 track_opt_met = opt_met[i]
                 track_ID+=1
                 f.write('  <particle nSpots="%s">\n'%(len_ID))
