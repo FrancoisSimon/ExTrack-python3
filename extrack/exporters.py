@@ -98,7 +98,7 @@ def extrack_2_pandas(tracks, pred_Bs, frames = None, opt_metrics = {}):
 
     return df
 
-def save_pred_2_CSV(path, all_Css, pred_Bss, dt, all_frames = None):
+def save_extrack_2_CSV(path, all_Css, pred_Bss, dt, all_frames = None):
     track_ID = 0
     
     preds_header_str_fmt = ''
@@ -122,8 +122,7 @@ def save_pred_2_CSV(path, all_Css, pred_Bss, dt, all_frames = None):
                 for pos, p, frame in zip(track, preds, frames):
                     preds_str = preds_str_fmt%(tuple(p))
                     f.write('%s,%s,%s,%s,%s,%s%s\n'%(track_ID, p[0], p[1], 0.0, dt* frame*1000, frame, preds_str))
-
-def save_extrack_2_xml(all_tracks, pred_Bss, params, path, dt, frames = None, opt_metrics = {}):
+def save_extrack_2_xml(all_tracks, pred_Bss, params, path, dt, all_frames = None, opt_metrics = {}):
     track_ID = 0
     for len_ID in all_tracks:
        tracks = all_tracks[len_ID]
@@ -148,7 +147,6 @@ def save_extrack_2_xml(all_tracks, pred_Bss, params, path, dt, frames = None, op
     for m in opt_metrics:
         opt_metrics_fmt = opt_metrics_fmt + '%s="%s" '%(m,'%s')
     
-    track_ID = 0
     with open(path, 'w') as f:
         f.write('<?xml version="1.0" encoding="UTF-8"?>\n<Tracks nTracks="%s" spaceUnits="µm" frameInterval="%s" timeUnits="ms" %s>\n'%(track_ID, dt, Extrack_headers))
         
@@ -159,15 +157,16 @@ def save_extrack_2_xml(all_tracks, pred_Bss, params, path, dt, frames = None, op
             for i, m in enumerate(opt_metrics):
                 opt_met[:,:,i] = opt_metrics[m][len_ID]
             opt_met.shape
-            if frames != None:
-                frames = frames[len_ID]
+            if all_frames != None:
+                all_frame = all_frames[len_ID]
             else:
                 all_frame = np.arange(tracks.shape[0]*tracks.shape[1]).reshape((tracks.shape[0],tracks.shape[1])) 
             for i, (track, preds, frames) in enumerate(zip(tracks, pred_Bs, all_frame)):
                 track_opt_met = opt_met[i]
-                track_ID+=1
                 f.write('  <particle nSpots="%s">\n'%(len_ID))
                 for pos, p, frame, track_opt_met in zip(track, preds, frames, track_opt_met):
                     preds_str = preds_str_fmt%(tuple(p))
                     opt_metrics_str = opt_metrics_fmt%(tuple(track_opt_met))
                     f.write('    <detection t="%s" x="%s" y="%s" z="%s"%s %s/>\n'%(frame,p[0],p[1],0.0, preds_str, opt_metrics_str))
+                f.write('  </particle>\n')
+        f.write('</Tracks>\n')
