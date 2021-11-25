@@ -488,25 +488,28 @@ def get_2DSPT_params(all_tracks,
                      min_values = {'LocErr' : 0.007, 'D0' : 1e-12, 'D1' : 0.00001, 'F0' : 0.001, 'p01' : 0.001, 'p10' : 0.001, 'pBL' : 0.001},
                      max_values = {'LocErr' : 0.6, 'D0' : 1, 'D1' : 10, 'F0' : 0.999, 'p01' : 1., 'p10' : 1., 'pBL' : 0.99}):
     '''
-    all_tracks : list of 3D arrays of tracks, dim 0 = track ID, dim 1 = sequence of positions, dim 2 = x, y, (z) axes
-    estimated_vals : list of parameters [LocError, D0, D1, F0, p01, p10] if 2 states,
-    [LocError, D0, D1, F0, F1, p01, p02, p10, p12, p20, p21] if 3 states.
-    dt : time in between each frame
-    verbose : if 1 returns the parameter values and log likelihood for each step of the fit, if 0 return nothing 
-    nb_substeps : nb of substeps per step (1 = no substeps)
-    nb_states : number of states in the model
-    method : lmfit optimization method
-    vary_params = list of bool stating if the method varies each parameters in the same order than in estimated_vals
-    steady_state : bool stating if assuming stady state or not (constrains rates and Fractions to 2 free params for a 2 states model or 6 for a 3 states model)
-    min_values, max_values : minimum values and maximum values of each parameters in the order of estimated_vals
+    all_tracks: dict with keys equals track length (e.g. '23') of 3D arrays: dim 0 = track, dim 1 = time position, dim 2 = x, y position.
+    dt: time in between frames.
+    cell_dims: dimension limits (um).
+    nb_substeps: number of virtual transition steps in between consecutive 2 positions.
+    nb_states: number of states. estimated_vals, min_values, max_values should be changed accordingly to describe all states and transitions.
+    frame_len: number of frames for which the probability is perfectly computed. See method of the paper for more details.
+    verbose: if 1, print the intermediate values for each iteration of the fit.
+    steady_state: True if tracks are considered at steady state (fractions independent of time), this is most likely not true as tracks join and leave the FOV.
+    vary_params: dict specifying if each parameters should be changed (True) or not (False).
+    estimated_vals: initial values of the fit. (stay constant if parameter fixed by vary_params). estimated_vals must be in between min_values and max_values even if fixed.
+    min_values: minimal values for the fit.
+    max_values: maximal values for the fit.
     
     in case of 3 states models vary_params, estimated_vals, min_values and max_values can be replaced :
- 
+    
     vary_params = {'LocErr' : True, 'D0' : False, 'D1' :  True, 'D2' : True, 'F0' : True, 'F1' : True, 'p01' : True, 'p02' : True, 'p10' : True,'p12' :  True,'p20' :  True, 'p21' : True, 'pBL' : True},
     estimated_vals = {'LocErr' : 0.023, 'D0' : 1e-20, 'D1' : 0.02, 'D2' :  0.1, 'F0' : 0.33,  'F1' : 0.33, 'p01' : 0.1, 'p02' : 0.1, 'p10' :0.1, 'p12' : 0.1, 'p20' :0.1, 'p21' :0.1, 'pBL' : 0.1},
     min_values = {'LocErr' : 0.007, 'D0' : 1e-20, 'D1' : 0.0000001, 'D2' :  0.000001, 'F0' : 0.001,  'F1' : 0.001, 'p01' : 0.001, 'p02' : 0.001, 'p10' :0.001, 'p12' : 0.001, 'p20' :0.001, 'p21' :0.001, 'pBL' : 0.001},
     max_values = {'LocErr' : 0.6, 'D0' : 1e-20, 'D1' : 1, 'D2' :  10, 'F0' : 0.999,  'F1' : 0.999, 'p01' : 1, 'p02' : 1, 'p10' : 1, 'p12' : 1, 'p20' : 1, 'p21' : 1, 'pBL' : 0.99}
-
+    
+    in case of 4 states models :
+    
     vary_params = {'LocErr' : True, 'D0' : True, 'D1' : True, 'D2' :  True, 'D3' : True, 'F0' : True,  'F1' : True, 'F2' : True, 'p01' : True, 'p02' : True, 'p03' : True, 'p10' : True, 'p12' : True, 'p13' : True, 'p20' :True, 'p21' :True, 'p23' : True, 'p30' :True, 'p31' :True, 'p32' : True, 'pBL' : True}
     estimated_vals = {'LocErr' : 0.023, 'D0' : 1e-20, 'D1' : 0.02, 'D2' :  0.1, 'D3' : 0.5, 'F0' : 0.1,  'F1' : 0.2, 'F2' : 0.3, 'p01' : 0.1, 'p02' : 0.1, 'p03' : 0.1, 'p10' :0.1, 'p12' : 0.1, 'p13' : 0.1, 'p20' :0.1, 'p21' :0.1, 'p23' : 0.1, 'p30' :0.1, 'p31' :0.1, 'p32' : 0.1, 'pBL' : 0.1}
     min_values = {'LocErr' : 0.005, 'D0' : 0, 'D1' : 0, 'D2' :  0.001, 'D3' : 0.001, 'F0' : 0.001,  'F1' : 0.001, 'F2' : 0.001, 'p01' : 0.001, 'p02' : 0.001, 'p03' : 0.001, 'p10' :0.001, 'p12' : 0.001, 'p13' : 0.001, 'p20' :0.001, 'p21' :0.001, 'p23' : 0.001, 'p30' :0.001, 'p31' :0.001, 'p32' : 0.001, 'pBL' : 0.001}
