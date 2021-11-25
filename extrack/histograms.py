@@ -348,5 +348,3 @@ def ground_truth_hist(all_Bs, nb_states = 2):
             seg_len_hists[:seg_len_hist.shape[0]] = seg_len_hists[:seg_len_hist.shape[0]] + seg_len_hist
             
     return seg_len_hists
-
-    return seg_len_hists
