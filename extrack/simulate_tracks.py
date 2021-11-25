@@ -130,7 +130,17 @@ def sim_FOV(nb_tracks=10000,
             pBL = 0.1, 
             cell_dims = [0.5,None,None], # dimension limits in x, y and z respectively
             min_len = 2):
-    
+    '''
+    nb_tracks: number of tracks simulated.
+    max_track_len: number of steps simulated per track.
+    LocErr: standard deviation of the localization error.
+    Ds: 1D array of the diffusion coefs for each state.
+    TrMat: transition array per step (lines: state at time n, cols: states at time n+1).
+    dt: time in between frames.
+    pBL: probability of bleaching per step.
+    cell_dims: dimension limits in x, y and z respectively. x, y dimension limits are useful when tracking membrane proteins in tirf when the particles leave the field of view from the sides of the cells. z dimension is relevant for cytoplasmic proteins which call leave from the z axis. Consider the particle can leave from both ends of each axis: multiply axis limit by 2 to aproximate tracks leaving from one end.
+    min_len: minimal track length for the track to be considered.
+    '''
     nb_sub_steps = 20
     nb_strobo_frames = 1
     nb_states = len(TrMat)
