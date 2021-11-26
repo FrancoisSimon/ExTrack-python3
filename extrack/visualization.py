@@ -102,7 +102,8 @@ def plot_tracks(DATA,
     
     for k, ID in enumerate(np.unique(DATA['track_ID'])[::-1][:np.product(nb_subplots)]):
         plt.subplot(nb_subplots[0], nb_subplots[1], k+1)
-        print(ID)
+        if mod(k,20)==0:
+          print('.', end = '')
         track = DATA[DATA['track_ID'] ==ID ]
         if nb_states == 2 :
             pred = track['pred_1']
@@ -117,5 +118,6 @@ def plot_tracks(DATA,
         plt.gca().set_aspect('equal', adjustable='box')
         plt.yticks(fontsize = 6)
         plt.xticks(fontsize = 6)
+    print('')
     plt.tight_layout(h_pad = 1, w_pad = 1)
 
