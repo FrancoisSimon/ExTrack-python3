@@ -18,11 +18,13 @@ def visualize_states_durations(all_tracks,
     params: lmfit parameters used for the model.
     dt: time in between frames.
     cell_dims: dimension limits (um). estimated_vals, min_values, max_values should be changed accordingly to describe all states and transitions.
-    nb_states: number of states. estimated_vals, min_values, max_values should be changed accordingly to describe all states and transitions.
-    frame_len: number of frames for which the probability is perfectly computed. See method of the paper for more details.
-    
+    max_nb_states: maximum number of sequences kept (most likely sequences).
+    nb_steps_lim: upper limit of the plot in the x axis (number of steps)
+    long_tracks: if True only selects tracks longer than nb_steps_lim
+    steps: x axis in seconds if False or in number of steps if False.
+
     outputs:
-    pred_Bs: dict describing the state probability of each track for each time position with track length as keys (number of time positions, e.g. '23') of 3D arrays: dim 0 = track, dim 1 = time position, dim 2 = state.
+    plot of all tracks (preferencially input a single movie)
     '''
     len_hists = len_hist(all_tracks, params, dt, cell_dims=cell_dims, nb_states=nb_states, nb_substeps=1, max_nb_states = max_nb_states)
         
