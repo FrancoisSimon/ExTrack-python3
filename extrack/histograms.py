@@ -285,7 +285,7 @@ def len_hist(all_tracks,params, dt, cell_dims=[0.5,None,None], nb_states=2, nb_s
     #seg_len_hists = np.zeros((all_tracks[-1].shape[1]+1,nb_states))
     seg_len_hists = np.zeros((all_tracks[-1].shape[1],nb_states))
     for k in range(len(all_tracks)):
-        print(k)
+        print('.', end='')
         if k == len(all_tracks)-1:
             isBL = 1 # last position correspond to tracks which didn't disapear within maximum track length
         else:
