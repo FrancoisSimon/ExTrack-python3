@@ -33,13 +33,25 @@ Optional : `pip install jupyter`
 
 ## Install ExTrack
 
-Simply run (as root): `python setup.py install`
+(needs to be run in anaconda prompt for anaconda users on windows)
 
-Check that it worked: `python -c "import extrack"`
+install dependencies :
+
+pip install lmfit
+pip install xmltodict
+pip install matplotlib
+pip install pandas
+
+install ExTrack :
+
+pip install -i https://test.pypi.org/simple/ extrack==0.4.4.8.2
 
 # Tutorial
 
-See the file tests/test_extrack.py to see the different functions and their applications 
+See either:
+- tests/test_extrack.py
+- or tests/tutorial_extrack.ipynb 
+to see the different functions and their applications.
 
 **Document here how to open a Jupyter notebook**
 
@@ -65,6 +77,8 @@ extrack.visualization.visualize_tracks : show all tracks in a single plot.
 extrack.visualization.plot_tracks : show the longest tracks on separated plots
 
 ## Input file format
+
+all_tracks: dict describing the tracks with track length as keys (number of time positions, e.g. '23') of 3D arrays: dim 0 = track, dim 1 = time position, dim 2 = x, y position.
 
 ## Caveats
 
