@@ -299,7 +299,7 @@ def len_hist(all_tracks,params, dt, cell_dims=[0.5,None,None], nb_states=2, nb_s
                 LP, cur_Bs, seg_len_hist  = P_segment_len(Csss, LocErr, ds, Fs, TrMat, pBL=pBL, isBL = isBL, cell_dims = cell_dims, nb_substeps=nb_substeps, max_nb_states = max_nb_states)
                 isBL = 0
                 seg_len_hists[:seg_len_hist.shape[0]] = seg_len_hists[:seg_len_hist.shape[0]] + seg_len_hist
-
+    print('')
     return seg_len_hists
 
 
