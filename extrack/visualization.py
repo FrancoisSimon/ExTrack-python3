@@ -12,7 +12,18 @@ def visualize_states_durations(all_tracks,
                                long_tracks = True,
                                nb_steps_lim = 20,
                                steps = False):
+    '''
+    arguments:
+    all_tracks: dict describing the tracks with track length as keys (number of time positions, e.g. '23') of 3D arrays: dim 0 = track, dim 1 = time position, dim 2 = x, y position.
+    params: lmfit parameters used for the model.
+    dt: time in between frames.
+    cell_dims: dimension limits (um). estimated_vals, min_values, max_values should be changed accordingly to describe all states and transitions.
+    nb_states: number of states. estimated_vals, min_values, max_values should be changed accordingly to describe all states and transitions.
+    frame_len: number of frames for which the probability is perfectly computed. See method of the paper for more details.
     
+    outputs:
+    pred_Bs: dict describing the state probability of each track for each time position with track length as keys (number of time positions, e.g. '23') of 3D arrays: dim 0 = track, dim 1 = time position, dim 2 = state.
+    '''
     len_hists = len_hist(all_tracks, params, dt, cell_dims=cell_dims, nb_states=nb_states, nb_substeps=1, max_nb_states = max_nb_states)
         
     if steps:
@@ -37,7 +48,11 @@ def visualize_states_durations(all_tracks,
 def visualize_tracks(DATA,
                      track_length_range = [10,np.inf],
                      figsize = (5,5)):
-    
+    '''
+    DATA: dataframe outputed by extrack.exporters.extrack_2_pandas
+    track_length_range: range of tracks ploted. plotting too many tracks may make it crash
+    figsize: size of the figure plotted
+    '''
     nb_states = 0
     for param in list(DATA.keys()):
         if param.find('pred')+1:
@@ -65,7 +80,12 @@ def plot_tracks(DATA,
                 nb_subplots = [5,5],
                 figsize = (10,10),
                 lim = 0.4 ):
-    
+    ''''
+    DATA: dataframe outputed by extrack.exporters.extrack_2_pandas.
+    max_track_length: maximum track length to be outputed, it will plot the longest tracks respecting this criteria.
+    nb_subplots: number of lines and columns of subplots.
+    figsize: size of the figure plotted
+    '''
     nb_states = 0
     for param in list(DATA.keys()):
         if param.find('pred')+1:
