@@ -452,19 +452,14 @@ def cum_Proba_Cs(params, all_tracks, dt, cell_dims, nb_states, nb_substeps, fram
             for n in range(int(np.ceil(len(Css)/nb_max))):
                 Csss = Css[n*nb_max:(n+1)*nb_max]
                 LP = Proba_Cs(Csss, LocErr, ds, Fs, TrMat,pBL, isBL,cell_dims, nb_substeps, frame_len, min_len)
-                #plt.clf()
-                #plt.hist(np.log(Ps), np.arange(-5,50, 0.5), density = True)
-                #plt.hist(Ps, np.arange(0,np.exp(18), np.exp(18)/200), density = True)
-                #print(len(Css[0]), cp.sum(LP)/(len(Css) * (len(Css[0])-1)))
                 Cum_P += cp.sum(LP)
         Cum_P = asnumpy(Cum_P)
         
         if verbose == 1:
             q = [param + ' = ' + str(np.round(params[param].value, 4)) for param in params]
             print(Cum_P, q)
-        #nb_locs = [Cs.shape[0]*Cs.shape[1] for Cs in all_tracks]
-        #nb_locs = np.sum(nb_locs)
-        #out = - np.exp(Cum_P/len(all_tracks)/(len(all_tracks[0])-1)) # normalize by the number of tracks and number of displacements
+        else:
+            print('.', end='')
         out = - Cum_P # normalize by the number of tracks and number of displacements
     else:
         out = 1e100
@@ -575,7 +570,6 @@ def get_params(nb_states = 2,
     
     params = Parameters()
     [params.add(**param_kwargs[k]) for k in range(len(param_kwargs))]
-    
     return params
 
 def get_2DSPT_params(all_tracks,
