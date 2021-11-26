@@ -24,25 +24,14 @@ For GPU parallelization, cupy can be installed as described here : https://githu
 # Installation (from this Gitlab) repository
 
 ## Install dependencies
-`pip install -r requirements.txt`
 
-Alternatively, you can install the dependencies manually by typing:
-`pip install numpy lmfit xmltodict`
+(needs to be run in anaconda prompt for anaconda users on windows)
+
+pip install numpy lmfit xmltodict`matplotlib pandas
 
 Optional : `pip install jupyter`
 
 ## Install ExTrack
-
-(needs to be run in anaconda prompt for anaconda users on windows)
-
-install dependencies :
-
-pip install lmfit
-pip install xmltodict
-pip install matplotlib
-pip install pandas
-
-install ExTrack :
 
 pip install -i https://test.pypi.org/simple/ extrack==0.4.4.8.2
 
