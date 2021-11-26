@@ -331,6 +331,18 @@ def predict_Bs(all_tracks,
     '''
     inputs the observed localizations and parameters and determines the proba
     of each localization to be in a given state.
+    
+    arguments:
+    all_tracks: dict describing the tracks with track length as keys (number of time positions, e.g. '23') of 3D arrays: dim 0 = track, dim 1 = time position, dim 2 = x, y position.
+    params: lmfit parameters used for the model.
+    dt: time in between frames.
+    cell_dims: dimension limits (um). estimated_vals, min_values, max_values should be changed accordingly to describe all states and transitions.
+    nb_states: number of states. estimated_vals, min_values, max_values should be changed accordingly to describe all states and transitions.
+    frame_len: number of frames for which the probability is perfectly computed. See method of the paper for more details.
+    
+    outputs:
+    pred_Bs: dict describing the state probability of each track for each time position with track length as keys (number of time positions, e.g. '23') of 3D arrays: dim 0 = track, dim 1 = time position, dim 2 = state.
+    extrack.visualization.visualize_states_durations
     '''
     nb_substeps=1 # substeps should not impact the step labelling
     LocErr, ds, Fs, TrMat, pBL = extract_params(params, dt, nb_states, nb_substeps)
