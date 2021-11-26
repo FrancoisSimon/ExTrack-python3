@@ -27,7 +27,7 @@ For GPU parallelization, cupy can be installed as described here : https://githu
 
 (needs to be run in anaconda prompt for anaconda users on windows)
 
-pip install numpy lmfit xmltodict`matplotlib pandas
+`pip install numpy lmfit xmltodict`matplotlib pandas`
 
 Optional : `pip install jupyter`
 
