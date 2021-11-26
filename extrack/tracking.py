@@ -598,7 +598,10 @@ def get_2DSPT_params(all_tracks,
                      min_values = {'LocErr' : 0.007, 'D0' : 1e-12, 'D1' : 0.00001, 'F0' : 0.001, 'p01' : 0.001, 'p10' : 0.001, 'pBL' : 0.001},
                      max_values = {'LocErr' : 0.6, 'D0' : 1, 'D1' : 10, 'F0' : 0.999, 'p01' : 1., 'p10' : 1., 'pBL' : 0.99}):
     '''
-    all_tracks: dict with keys equals track length (e.g. '23') of 3D arrays: dim 0 = track, dim 1 = time position, dim 2 = x, y position.
+    fitting the parameters to the data set
+
+    arguments:
+    all_tracks: dict describing the tracks with track length as keys (number of time positions, e.g. '23') of 3D arrays: dim 0 = track, dim 1 = time position, dim 2 = x, y position.
     dt: time in between frames.
     cell_dims: dimension limits (um).
     nb_substeps: number of virtual transition steps in between consecutive 2 positions.
@@ -610,6 +613,9 @@ def get_2DSPT_params(all_tracks,
     estimated_vals: initial values of the fit. (stay constant if parameter fixed by vary_params). estimated_vals must be in between min_values and max_values even if fixed.
     min_values: minimal values for the fit.
     max_values: maximal values for the fit.
+
+    outputs:
+    model_fit: lmfit model
     
     in case of 3 states models vary_params, estimated_vals, min_values and max_values can be replaced :
     
