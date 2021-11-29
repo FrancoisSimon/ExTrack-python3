@@ -23,8 +23,6 @@ For GPU parallelization, cupy can be installed as described here : https://githu
 
 `pip install -i https://test.pypi.org/simple/ ExTrack`
 
-# Installation (from this Gitlab) repository
-
 ## Install dependencies
 
 (needs to be run in anaconda prompt for anaconda users on windows)
@@ -44,6 +42,15 @@ These contain the most important functions. The .ipynb file is more didactic. On
 the tutorial files including the files containing tracks must be downloaded from this repository in order to do the tutorial.
 
 **Document here how to open a Jupyter notebook**
+
+# Installation (from this Gitlab) repository
+
+if git is not installed:
+`sudo apt install git`
+
+Then:
+`git clone https://github.com/FrancoisSimon/ExTrack-python3.git`
+`sudo python setup.py install`
 
 # Usage
 ## Main functions
