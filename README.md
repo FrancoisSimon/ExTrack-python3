@@ -50,6 +50,7 @@ if git is not installed:
 
 Then:
 `git clone https://github.com/FrancoisSimon/ExTrack-python3.git`
+
 `sudo python setup.py install`
 
 # Usage
