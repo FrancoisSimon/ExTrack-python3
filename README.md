@@ -50,7 +50,7 @@ Then:
 
 `git clone https://github.com/FrancoisSimon/ExTrack-python3.git`
 
-`sudo python setup.py install`
+`sudo python setup.py install` (brocken)
 
 # Usage
 ## Main functions
