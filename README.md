@@ -5,6 +5,8 @@ This repository contains the necessary scripts to run the method ExTrack. ExTrac
 
 ExTrack has been designed and implemented by François Simon. The python implementation of ExTrack can profite from GPU parallelization using the cupy library. An additionnal version of ExTrack is available on Fiji via Trackmate thanks to Jean-Yves Tinevez https://sites.imagej.net/TrackMate-ExTrack/. The fiji version can profite from CPU parallelization better performances.
 
+https://pypi.org/project/extrack/
+
 # Dependencies
 
 - numpy
