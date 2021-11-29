@@ -21,8 +21,6 @@ For GPU parallelization, cupy can be installed as described here : https://githu
 
 # Installation (from pip)
 
-`pip install -i https://test.pypi.org/simple/ ExTrack`
-
 ## Install dependencies
 
 (needs to be run in anaconda prompt for anaconda users on windows)
