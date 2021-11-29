@@ -29,8 +29,6 @@ For GPU parallelization, cupy can be installed as described here : https://githu
 
 `pip install numpy lmfit xmltodict matplotlib pandas`
 
-Optional : `pip install jupyter`
-
 ## Install ExTrack
 
 pip install -i https://test.pypi.org/simple/ extrack==0.4.4.8.2
@@ -40,7 +38,8 @@ pip install -i https://test.pypi.org/simple/ extrack==0.4.4.8.2
 See either:
 - tests/test_extrack.py
 - or tests/tutorial_extrack.ipynb 
-to see the different functions and their applications.
+These contain the most important functions. The .ipynb file is more didactic. One has to install jupyter to use it: `pip install jupyter`.
+the tutorial files including the files containing tracks must be downloaded from this repository 
 
 **Document here how to open a Jupyter notebook**
 
