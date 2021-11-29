@@ -31,7 +31,7 @@ For GPU parallelization, cupy can be installed as described here : https://githu
 
 ## Install ExTrack
 
-pip install -i https://test.pypi.org/simple/ extrack==0.4.4.8.2
+`pip install extrack==1.0`
 
 # Tutorial
 
@@ -39,7 +39,7 @@ See either:
 - tests/test_extrack.py
 - or tests/tutorial_extrack.ipynb 
 These contain the most important functions. The .ipynb file is more didactic. One has to install jupyter to use it: `pip install jupyter`.
-the tutorial files including the files containing tracks must be downloaded from this repository 
+the tutorial files including the files containing tracks must be downloaded from this repository in order to do the tutorial.
 
 **Document here how to open a Jupyter notebook**
 
