@@ -49,6 +49,7 @@ if git is not installed:
 `sudo apt install git`
 
 Then:
+
 `git clone https://github.com/FrancoisSimon/ExTrack-python3.git`
 
 `sudo python setup.py install`
