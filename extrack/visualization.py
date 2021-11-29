@@ -63,6 +63,8 @@ def visualize_tracks(DATA,
     plt.figure(figsize = figsize)
     DATA['X']
     for ID in np.unique(DATA['track_ID'])[::-1]:
+        if np.mod(ID, 20)==0:
+            print('.', end = '')
         #print(ID)
         track = DATA[DATA['track_ID'] ==ID ]
         if track_length_range[0] < len(track) > track_length_range[0]:
@@ -102,8 +104,7 @@ def plot_tracks(DATA,
     
     for k, ID in enumerate(np.unique(DATA['track_ID'])[::-1][:np.product(nb_subplots)]):
         plt.subplot(nb_subplots[0], nb_subplots[1], k+1)
-        if mod(k,20)==0:
-          print('.', end = '')
+
         track = DATA[DATA['track_ID'] ==ID ]
         if nb_states == 2 :
             pred = track['pred_1']
