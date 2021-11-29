@@ -100,11 +100,7 @@ This program is released under the GNU General Public License version 3 or upper
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Deploying (developer only)
-```
-python setup.py sdist
-gpg --detach-sign -a dist/fastspt-11.4.tar.gz
-twine upload dist/fastspt-11.4.tar.gz dist/fastspt-11.4.tar.gz.asc
-```
+
 # Authors
 Francois Simon
 
