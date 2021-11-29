@@ -31,7 +31,7 @@ For GPU parallelization, cupy can be installed as described here : https://githu
 
 ## Install ExTrack
 
-`pip install extrack==1.0`
+`pip install extrack`
 
 # Tutorial
 
