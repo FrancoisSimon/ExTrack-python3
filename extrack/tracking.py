@@ -567,15 +567,17 @@ def get_params(nb_states = 2,
             param_kwargs.append({'name' : D, 'expr' : expr})
             last_D = D
             sum_Ds += estimated_vals[D]
+        
         param_kwargs.append({'name' : 'F0', 'value' : estimated_vals['F0'], 'min' : min_values['F0'], 'max' : 0.3, 'brute_step' : 0.04, 'vary' : vary_params['F0']})
         frac = 1-estimated_vals['F0']
-        expr = '1-F0'
-        for F in Fs[1:]:
-            param_kwargs.append({'name' : F + '_fract', 'value' : estimated_vals[F]/frac, 'min' : 0, 'max' : 1 , 'vary' : vary_params[F]})
-            param_kwargs.append({'name' : F, 'expr' : F + '_fract*('+expr+')'})
+        expr = '1-F0'        
+        
+        for F in Fs[1:len(Ds)-1]:
+            param_kwargs.append({'name' : F , 'value' : estimated_vals[F], 'min' : 0.001, 'max' : 0.99 , 'vary' : vary_params[F]})
+            frac = frac - 1
             expr = expr + '-' + F
-            frac = frac - estimated_vals[F]
-        param_kwargs.append({'name' : 'F'+str(len(Fs)), 'expr' : expr})
+        param_kwargs.append({'name' : 'F'+str(len(Ds)-1), 'expr' : expr})
+        
         for param in list(vary_params.keys()):
             if param.startswith('p'):
                 param_kwargs.append({'name' : param, 'value' : estimated_vals[param], 'min' : min_values[param], 'max' : max_values[param] , 'vary' : vary_params[param]})
