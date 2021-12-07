@@ -125,13 +125,15 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
     
     sub_Bs = cur_Bs.copy()[:,:cur_Bs.shape[1]//nb_states,:nb_substeps] # list of possible current states we can meet to compute the proba of staying in the FOV
     sub_ds = cp.mean(ds[sub_Bs]**2, axis = 2)**0.5 # corresponding list of d
+    sub_ds = asnumpy(sub_ds)
     
     p_stay = np.ones(sub_ds.shape[-1])
     for cell_len in cell_dims:
         xs = np.linspace(0+cell_len/2000,cell_len-cell_len/2000,1000)
-        cur_p_stay = ((np.mean(scipy.stats.norm.cdf((cell_len-xs[:,None])/(sub_ds+1e-200)) - scipy.stats.norm.cdf(-xs[:,None]/(sub_ds+1e-200)),0))*2)/2 # proba to stay in the FOV for each of the possible cur Bs
+        cur_p_stay = ((cp.mean(scipy.stats.norm.cdf((cell_len-xs[:,None])/(sub_ds+1e-200)) - scipy.stats.norm.cdf(-xs[:,None]/(sub_ds+1e-200)),0))*2)/2 # proba to stay in the FOV for each of the possible cur Bs
         p_stay = p_stay*cur_p_stay
-    Lp_stay = np.log(p_stay * (1-pBL)) # proba for the track to survive = both stay in the FOV and not bleach
+    p_stay = cp.array(p_stay)
+    Lp_stay = cp.log(p_stay * (1-pBL)) # proba for the track to survive = both stay in the FOV and not bleach
     
     # inject the first position to get the associated Km and Ks :
     Km, Ks = first_log_integrale_dif(Cs[:,:, nb_locs-current_step], LocErr, cur_ds)
@@ -219,7 +221,7 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
         #end_p_stay = p_stay[np.argmax(np.all(cur_states[:,None:,:-1] == sub_Bs[:,:,None],-1),1)]
         end_p_stay = p_stay[cur_states[:,None:,:-1]][:,:,0]
         end_p_stay.shape
-        LL = np.log(pBL + (1-end_p_stay) - pBL * (1-end_p_stay)) + LT
+        LL = cp.log(pBL + (1-end_p_stay) - pBL * (1-end_p_stay)) + LT
         
     newKs = cp.array((Ks**2 + LocErr**2)**0.5)[:,:,0]
     log_integrated_term = -cp.log(2*np.pi*newKs**2) - cp.sum((Cs[:,:,0] - Km)**2,axis=2)/(2*newKs**2)
