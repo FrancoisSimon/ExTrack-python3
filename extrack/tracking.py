@@ -460,19 +460,22 @@ def cum_Proba_Cs(params, all_tracks, dt, cell_dims, nb_states, nb_substeps, fram
     '''
     LocErr, ds, Fs, TrMat, pBL = extract_params(params, dt, nb_states, nb_substeps)
     min_len = all_tracks[0].shape[1]
-    if np.all(TrMat>0):
+    
+    if np.all(TrMat>0) and np.all(Fs>0):
         Cum_P = 0
+        Csss = []
         for k in range(len(all_tracks)):
             if k == len(all_tracks)-1:
                 isBL = 0 # last position correspond to tracks which didn't disapear within maximum track length
             else:
                 isBL = 1
             Css = all_tracks[k]
-            nb_max = 700
+            nb_max = 100
             for n in range(int(np.ceil(len(Css)/nb_max))):
-                Csss = Css[n*nb_max:(n+1)*nb_max]
-                LP = Proba_Cs(Csss, LocErr, ds, Fs, TrMat,pBL, isBL,cell_dims, nb_substeps, frame_len, min_len)
-                Cum_P += cp.sum(LP)
+                Csss.append(Css[n*nb_max:(n+1)*nb_max])
+        pool = multiprocessing.Pool(workers)
+        LP = pool.map(pool_star_proba, product(Csss, [LocErr], [ds], [Fs], [TrMat],[pBL], [isBL],[cell_dims], [nb_substeps], [frame_len], [min_len]))
+        Cum_P += cp.sum(cp.concatenate(LP))
         Cum_P = asnumpy(Cum_P)
         
         if verbose == 1:
