@@ -15,6 +15,9 @@ import itertools
 import scipy
 from lmfit import minimize, Parameters
 
+import multiprocessing
+from itertools import product
+
 '''
 Maximum likelihood to determine transition rates :
 We compute the probability of observing the tracks knowing the parameters :
@@ -444,7 +447,10 @@ def extract_params(params, dt, nb_states, nb_substeps):
     ds = np.sqrt(2*Ds*dt)
     return LocErr, ds, Fs, TrMat, pBL
 
-def cum_Proba_Cs(params, all_tracks, dt, cell_dims, nb_states, nb_substeps, frame_len, verbose = 1):
+def pool_star_proba(args):
+    return Proba_Cs(*args)
+
+def cum_Proba_Cs(params, all_tracks, dt, cell_dims, nb_states, nb_substeps, frame_len, verbose = 1, workers = 1):
     '''
     each probability can be multiplied to get a likelihood of the model knowing
     the parameters LocErr, D0 the diff coefficient of state 0 and F0 fraction of
@@ -594,6 +600,7 @@ def get_2DSPT_params(all_tracks,
                      nb_states = 2,
                      frame_len = 8,
                      verbose = 1,
+                     workers = 1,
                      method = 'powell',
                      steady_state = False,
                      cell_dims = [1], # list of dimensions limit for the field of view (FOV) of the cell in um, a membrane protein in a typical e-coli cell in tirf would have a cell_dims = [0.5,3], in case of cytosolic protein one should imput the depth of the FOV e.g. [0.3] for tirf or [0.8] for hilo
@@ -673,7 +680,7 @@ def get_2DSPT_params(all_tracks,
         sorted_tracks.append(all_tracks[l])
     all_tracks = sorted_tracks
     
-    fit = minimize(cum_Proba_Cs, params, args=(all_tracks, dt, cell_dims, nb_states, nb_substeps, frame_len, verbose), method = method, nan_policy = 'propagate')
+    fit = minimize(cum_Proba_Cs, params, args=(all_tracks, dt, cell_dims, nb_states, nb_substeps, frame_len, verbose, workers), method = method, nan_policy = 'propagate')
     
     return fit
 
