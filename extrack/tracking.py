@@ -464,17 +464,26 @@ def cum_Proba_Cs(params, all_tracks, dt, cell_dims, nb_states, nb_substeps, fram
     if np.all(TrMat>0) and np.all(Fs>0):
         Cum_P = 0
         Csss = []
+        isBLs = []
         for k in range(len(all_tracks)):
             if k == len(all_tracks)-1:
                 isBL = 0 # last position correspond to tracks which didn't disapear within maximum track length
             else:
                 isBL = 1
             Css = all_tracks[k]
-            nb_max = 100
+            nb_max = 50
             for n in range(int(np.ceil(len(Css)/nb_max))):
                 Csss.append(Css[n*nb_max:(n+1)*nb_max])
-        pool = multiprocessing.Pool(workers)
-        LP = pool.map(pool_star_proba, product(Csss, [LocErr], [ds], [Fs], [TrMat],[pBL], [isBL],[cell_dims], [nb_substeps], [frame_len], [min_len]))
+                if k == len(all_tracks)-1:
+                    isBLs.append(0) # last position correspond to tracks which didn't disapear within maximum track length
+                else:
+                    isBLs.append(1)
+        Csss.reverse()
+        args_prod = np.array(list(product(Csss, [LocErr], [ds], [Fs], [TrMat],[pBL], [0],[cell_dims], [nb_substeps], [frame_len], [min_len])))
+        args_prod[:, 6] = isBLs
+        with multiprocessing.Pool(workers) as pool:
+            LP = pool.map(pool_star_proba, args_prod)
+        
         Cum_P += cp.sum(cp.concatenate(LP))
         Cum_P = asnumpy(Cum_P)
         
