@@ -358,13 +358,14 @@ def predict_Bs(all_tracks,
     max_len = int(l_list[-1])
     
     for l in l_list:
-        if int(l) == max_len:
-            isBL = 1
-        else:
-            isBL = 0
-        LP_Cs, trunkated_Bs, pred_Bs = P_Cs_inter_bound_stats(all_tracks[l], LocErr, ds, Fs, TrMat, pBL,isBL, cell_dims, nb_substeps = 1, frame_len = frame_len, do_preds = 1, min_len = min_len)
-        all_pred_Bs.append(pred_Bs)
-        
+        if len(all_tracks[l]) > 0:
+            if int(l) == max_len:
+                isBL = 1
+            else:
+                isBL = 0
+            LP_Cs, trunkated_Bs, pred_Bs = P_Cs_inter_bound_stats(all_tracks[l], LocErr, ds, Fs, TrMat, pBL,isBL, cell_dims, nb_substeps = 1, frame_len = frame_len, do_preds = 1, min_len = min_len)
+            all_pred_Bs.append(pred_Bs)
+    
     all_pred_Bs_dict = {}
     for pred_Bs in all_pred_Bs:
         all_pred_Bs_dict[str(pred_Bs.shape[1])] = pred_Bs
@@ -385,9 +386,9 @@ def extract_params(params, dt, nb_states, nb_substeps):
         F0 = params['F0'].value
         Fs = np.array([F0, 1-F0])
         pBL = params['pBL'].value
-        p01 = params['p01']
-        p10 =  params['p10']
-
+        p01 = params['p01'].value
+        p10 =  params['p10'].value
+        
         # correct p10 and p01 which actually correspond to r*dt to get the 
         # corresponding discrete probabilities of at least 1 transition during 
         # a substep :
@@ -689,7 +690,8 @@ def get_2DSPT_params(all_tracks,
     l_list = np.sort(np.array(list(all_tracks.keys())).astype(int)).astype(str)
     sorted_tracks = []
     for l in l_list:
-        sorted_tracks.append(all_tracks[l])
+        if len(all_tracks[l]) > 0 :
+            sorted_tracks.append(all_tracks[l])
     all_tracks = sorted_tracks
     
     fit = minimize(cum_Proba_Cs, params, args=(all_tracks, dt, cell_dims, nb_states, nb_substeps, frame_len, verbose, workers), method = method, nan_policy = 'propagate')
