@@ -20,7 +20,7 @@ else :
 
 import scipy
 from extrack.tracking import extract_params, get_all_Bs, get_Ts_from_Bs, first_log_integrale_dif, log_integrale_dif
-def P_segment_len(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5], nb_substeps=1, max_nb_states = 1000) :
+def P_segment_len(Cs, LocErr, ds, Fs, TrMat, min_l = 5, pBL=0.1, isBL = 1, cell_dims = [0.5], nb_substeps=1, max_nb_states = 1000) :
     '''
     compute the product of the integrals over Ri as previousily described
     work in log space to avoid overflow and underflow
@@ -45,8 +45,7 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5
     Cs = cp.array(Cs)
     nb_states = TrMat.shape[0]
     Cs = Cs[:,:,::-1]
-    min_l = 5
-    
+        
     cell_dims = np.array(cell_dims)
     cell_dims = cell_dims[cell_dims!=None]
     
@@ -274,13 +273,14 @@ def len_hist(all_tracks,params, dt, cell_dims=[0.5,None,None], nb_states=2, nb_s
     here sum the logs(likelihood) to avoid too big numbers
     '''
     LocErr, ds, Fs, TrMat, pBL = extract_params(params, dt, nb_states, nb_substeps)
-
+    min_l = np.min((np.array(list(all_Cs.keys()))).astype(int))
+    
     if type(all_tracks) == type({}):
         new_all_tracks = []
         for l in all_tracks:
             new_all_tracks.append(all_tracks[l])
         all_tracks = new_all_tracks
-    
+       
     #seg_len_hists = np.zeros((all_tracks[-1].shape[1]+1,nb_states))
     seg_len_hists = np.zeros((all_tracks[-1].shape[1],nb_states))
     for k in range(len(all_tracks)):
@@ -295,7 +295,7 @@ def len_hist(all_tracks,params, dt, cell_dims=[0.5,None,None], nb_states=2, nb_s
             nb_max = 50
             for n in range(int(np.ceil(len(Css)/nb_max))):
                 Csss = Css[n*nb_max:(n+1)*nb_max]
-                LP, cur_Bs, seg_len_hist  = P_segment_len(Csss, LocErr, ds, Fs, TrMat, pBL=pBL, isBL = isBL, cell_dims = cell_dims, nb_substeps=nb_substeps, max_nb_states = max_nb_states)
+                LP, cur_Bs, seg_len_hist  = P_segment_len(Csss, LocErr, ds, Fs, TrMat, min_l = min_l, pBL=pBL, isBL = isBL, cell_dims = cell_dims, nb_substeps=nb_substeps, max_nb_states = max_nb_states)
                 isBL = 0
                 seg_len_hists[:seg_len_hist.shape[0]] = seg_len_hists[:seg_len_hist.shape[0]] + seg_len_hist
     print('')
