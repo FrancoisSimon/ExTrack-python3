@@ -273,7 +273,7 @@ def len_hist(all_tracks,params, dt, cell_dims=[0.5,None,None], nb_states=2, nb_s
     here sum the logs(likelihood) to avoid too big numbers
     '''
     LocErr, ds, Fs, TrMat, pBL = extract_params(params, dt, nb_states, nb_substeps)
-    min_l = np.min((np.array(list(all_Cs.keys()))).astype(int))
+    min_l = np.min((np.array(list(all_tracks.keys()))).astype(int))
     
     if type(all_tracks) == type({}):
         new_all_tracks = []
