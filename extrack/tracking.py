@@ -379,72 +379,33 @@ def extract_params(params, dt, nb_states, nb_substeps):
     '''
     LocErr = params['LocErr'].value
     
-    if nb_states == 2:
-        D0 = params['D0'].value
-        D1 = params['D1'].value
-        Ds = np.array([D0,D1])
-        F0 = params['F0'].value
-        Fs = np.array([F0, 1-F0])
-        pBL = params['pBL'].value
-        p01 = params['p01'].value
-        p10 =  params['p10'].value
-        
-        # correct p10 and p01 which actually correspond to r*dt to get the 
-        # corresponding discrete probabilities of at least 1 transition during 
-        # a substep :
-        p01 = 1 - np.exp(-p01/nb_substeps)
-        p10 = 1 - np.exp(-p10/nb_substeps)
-        
-        TrMat = np.array([[1-p01, p01],[p10, 1- p10]])
-    
-    elif nb_states == 3:
-        D0 = params['D0'].value
-        D1 = params['D1'].value
-        D2 = params['D2'].value
-        Ds = np.array([D0,D1,D2])
-        p01 = params['p01'].value
-        p02 = params['p02'].value
-        p10 = params['p10'].value
-        p12 = params['p12'].value
-        p20 = params['p20'].value
-        p21 = params['p21'].value
-        
-        F0 = params['F0'].value
-        F1 = params['F1'].value
-        F2 = params['F2'].value
-        pBL = params['pBL'].value
-        
-        Fs = np.array([F0, F1, F2])
-        p01 = 1 - np.exp(-p01/nb_substeps)
-        p02 = 1 - np.exp(-p02/nb_substeps)
-        p10 = 1 - np.exp(-p10/nb_substeps)
-        p12 = 1 - np.exp(-p12/nb_substeps)
-        p20 = 1 - np.exp(-p20/nb_substeps)
-        p21 = 1 - np.exp(-p21/nb_substeps)
+    param_names = np.sort(list(params.keys()))
 
-        TrMat = np.array([[1-p01-p02, p01, p02],
-                          [p10, 1-p10-p12, p12],
-                          [p20, p21, 1-p20-p21]])
-    else :
-        Ds = []
-        Fs = []
-        for param in params:
-            if param.startswith('D') and len(param)<3:
-                Ds.append(params[param].value)
-            elif param.startswith('F'):
-                Fs.append(params[param].value)
-        Ds = np.array(Ds)
-        Fs = np.array(Fs)
-        TrMat = np.zeros((len(Ds),len(Ds)))
-        for param in params:
-            if param == 'pBL':
-                pBL = params[param].value
-            elif param.startswith('p'):
-                i = int(param[1])
-                j = int(param[2])
-                TrMat[i,j] = params[param].value
-        TrMat = 1 - np.exp(-TrMat/nb_substeps)
-        TrMat[np.arange(len(Ds)), np.arange(len(Ds))] = 1-np.sum(TrMat,1)
+    Ds = []
+    Fs = []
+    for param in param_names:
+        if param.startswith('D') and len(param)<3:
+            Ds.append(params[param].value)
+        elif param.startswith('F'):
+            Fs.append(params[param].value)
+    Ds = np.array(Ds)
+    Fs = np.array(Fs)
+    TrMat = np.zeros((len(Ds),len(Ds)))
+    for param in params:
+        if param == 'pBL':
+            pBL = params[param].value
+        elif param.startswith('p'):
+            i = int(param[1])
+            j = int(param[2])
+            TrMat[i,j] = params[param].value
+    
+    TrMat = TrMat/nb_substeps
+    
+
+    TrMat = 1 - np.exp(-TrMat)
+    TrMat[np.arange(len(Ds)), np.arange(len(Ds))] = 1-np.sum(TrMat,1)
+    
+    #print(TrMat)
     ds = np.sqrt(2*Ds*dt)
     return LocErr, ds, Fs, TrMat, pBL
 
