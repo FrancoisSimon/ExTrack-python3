@@ -466,6 +466,7 @@ def get_2DSPT_params(all_Cs,
                                 {'name' : 'D1', 'expr' : 'D0 + D1_minus_D0'},
                                 {'name' : 'LocErr', 'value' : estimated_vals['LocErr'], 'min' :  min_values['LocErr'],'max' :  max_values['LocErr'], 'vary' : vary_params['LocErr']},
                                 {'name' : 'F0', 'value' : estimated_vals['F0'], 'min' :  min_values['F0'], 'max' :  max_values['F0'], 'vary' :  vary_params['F0']},
+                                {'name' : 'F1', 'expr' : '1 - F0'},
                                 {'name' : 'p01', 'value' : estimated_vals['p01'], 'min' :  min_values['p01'], 'max' :  max_values['p01'], 'vary' :  vary_params['p01']},
                                 {'name' : 'p10', 'expr' : 'p01/(1/F0-1)'}]
         else :
@@ -474,6 +475,7 @@ def get_2DSPT_params(all_Cs,
                                 {'name' : 'D1', 'expr' : 'D0 + D1_minus_D0' },
                                 {'name' : 'LocErr', 'value' : estimated_vals['LocErr'], 'min' :  min_values['LocErr'],'max' :  max_values['LocErr'], 'vary' : vary_params['LocErr']},
                                 {'name' : 'F0', 'value' : estimated_vals['F0'], 'min' :  min_values['F0'], 'max' :  max_values['F0'], 'vary' :  vary_params['F0']},
+                                {'name' : 'F1', 'expr' : '1 - F0'},
                                 {'name' : 'p01', 'value' : estimated_vals['p01'], 'min' :  min_values['p01'], 'max' :  max_values['p01'], 'vary' :  vary_params['p01']},
                                 {'name' : 'p10', 'value' : estimated_vals['p10'], 'min' :  min_values['p10'], 'max' :  max_values['p10'], 'vary' : vary_params['p10']}]
 
