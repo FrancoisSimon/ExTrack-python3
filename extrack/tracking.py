@@ -443,8 +443,14 @@ def cum_Proba_Cs(params, all_tracks, dt, cell_dims, nb_states, nb_substeps, fram
         Csss.reverse()
         args_prod = np.array(list(product(Csss, [LocErr], [ds], [Fs], [TrMat],[pBL], [0],[cell_dims], [nb_substeps], [frame_len], [min_len])))
         args_prod[:, 6] = isBLs
-        with multiprocessing.Pool(workers) as pool:
-            LP = pool.map(pool_star_proba, args_prod)
+
+        if workers >= 2:
+            with multiprocessing.Pool(workers) as pool:
+                LP = pool.map(pool_star_proba, args_prod)
+        else:
+            LP = []
+            for args in args_prod:
+                LP.append(pool_star_proba(args))
         
         Cum_P += cp.sum(cp.concatenate(LP))
         Cum_P = asnumpy(Cum_P)
@@ -478,6 +484,7 @@ def get_params(nb_states = 2,
                             {'name' : 'D1', 'expr' : 'D0 + D1_minus_D0'},
                             {'name' : 'LocErr', 'value' : estimated_vals['LocErr'], 'min' :  min_values['LocErr'],'max' :  max_values['LocErr'], 'vary' : vary_params['LocErr']},
                             {'name' : 'F0', 'value' : estimated_vals['F0'], 'min' :  min_values['F0'], 'max' :  max_values['F0'], 'vary' :  vary_params['F0']},
+                            {'name' : 'F1', 'expr' : '1 - F0'},
                             {'name' : 'p01', 'value' : estimated_vals['p01'], 'min' :  min_values['p01'], 'max' :  max_values['p01'], 'vary' :  vary_params['p01']},
                             {'name' : 'p10', 'expr' : 'p01/(1/F0-1)'},
                             {'name' : 'pBL', 'value' : estimated_vals['pBL'], 'min' :  min_values['pBL'], 'max' :  max_values['pBL'], 'vary' : vary_params['pBL']}]
@@ -487,6 +494,7 @@ def get_params(nb_states = 2,
                             {'name' : 'D1', 'expr' : 'D0 + D1_minus_D0' },
                             {'name' : 'LocErr', 'value' : estimated_vals['LocErr'], 'min' :  min_values['LocErr'],'max' :  max_values['LocErr'], 'vary' : vary_params['LocErr']},
                             {'name' : 'F0', 'value' : estimated_vals['F0'], 'min' :  min_values['F0'], 'max' :  max_values['F0'], 'vary' :  vary_params['F0']},
+                            {'name' : 'F1', 'expr' : '1 - F0'},
                             {'name' : 'p01', 'value' : estimated_vals['p01'], 'min' :  min_values['p01'], 'max' :  max_values['p01'], 'vary' :  vary_params['p01']},
                             {'name' : 'p10', 'value' : estimated_vals['p10'], 'min' :  min_values['p10'], 'max' :  max_values['p10'], 'vary' : vary_params['p10']},
                             {'name' : 'pBL', 'value' : estimated_vals['pBL'], 'min' :  min_values['pBL'], 'max' :  max_values['pBL'], 'vary' : vary_params['pBL']}]
