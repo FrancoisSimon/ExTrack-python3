@@ -58,9 +58,10 @@ def log_integrale_dif(Ci, l2, cur_d2s, m_arr, s2_arr):
     dim 1 : possible sequences of states
     dim 2 : x,y (z)
     '''
+   l2_plus_s2_arr = l2+s2_arr
     new_m = (m_arr*l2 + Ci*s2_arr)/(l2+s2_arr)
-    new_s2 = ((cur_d2s*l2 + cur_d2s*s2_arr + l2*s2_arr)/(l2 + s2_arr))
-    new_K = m_arr.shape[2] * -0.5*cp.log(2*np.pi*(l2 + s2_arr[:,:,0])) - cp.sum((Ci-m_arr)**2/(2*(l2+s2_arr)),axis = 2)
+    new_s2 = ((cur_d2s*l2 + cur_d2s*s2_arr + l2*s2_arr)/l2_plus_s2_arr)
+    new_K = m_arr.shape[2] * -0.5*cp.log(2*np.pi*(l2_plus_s2_arr[:,:,0])) - cp.sum((Ci-m_arr)**2/(2*l2_plus_s2_arr),axis = 2)
     return new_m, new_s2, new_K
 
 def first_log_integrale_dif(Ci, l2, cur_d2s):
