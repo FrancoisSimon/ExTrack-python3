@@ -3,16 +3,14 @@ import extrack
 import numpy as np
 from matplotlib import pyplot as plt
 
-dir(extrack)
-
 dt = 0.02
 
 # simulate tracks able to come and leave from the field of view :
 
-all_tracks, all_Bs = extrack.simulate_tracks.sim_FOV(nb_tracks=10000,
+all_tracks, all_Bs = extrack.simulate_tracks.sim_FOV(nb_tracks=2000,
                                                      max_track_len=60,
                                                      LocErr=0.02,
-                                                     Ds = np.array([0,0.5]),
+                                                     Ds = np.array([0,0.25]),
                                                      initial_fractions = np.array([0.6,0.4]),
                                                      TrMat = np.array([[0.9,0.1],[0.1,0.9]]),
                                                      dt = dt,
@@ -20,15 +18,16 @@ all_tracks, all_Bs = extrack.simulate_tracks.sim_FOV(nb_tracks=10000,
                                                      cell_dims = [1,None,None], # dimension limits in x, y and z respectively
                                                      min_len = 5)
 
-# fit parameters of the simulated tracks :
-
+# fit parameters of the simulated tracks : 
+# increase the number of workers accordingly to your number of avaialable core for faster computing, not working in windows
 model_fit = extrack.tracking.get_2DSPT_params(all_tracks,
                                               dt,
                                               cell_dims = [1],
                                               nb_substeps = 2,
-                                              nb_states = 7,
-                                              frame_len = 6,
+                                              nb_states = 2,
+                                              frame_len = 7,
                                               verbose = 1,
+                                              workers = 1,
                                               method = 'powell',
                                               steady_state = False,
                                               vary_params = {'LocErr' : True, 'D0' : True, 'D1' : True, 'F0' : True, 'p01' : True, 'p10' : True, 'pBL' : True},
@@ -131,7 +130,7 @@ DATA.to_csv(save_path)
 
 
 # simulate and fit a 3 states model
-all_tracks, all_Bs = extrack.simulate_tracks.sim_FOV(nb_tracks=40000,
+all_tracks, all_Bs = extrack.simulate_tracks.sim_FOV(nb_tracks=10000,
                                                      max_track_len=60,
                                                      min_track_len = 5,
                                                      LocErr=0.02,
@@ -153,6 +152,7 @@ model_fit = extrack.tracking.get_2DSPT_params(all_tracks,
                                               nb_states = 3,
                                               frame_len = 5,
                                               verbose = 0,
+                                              workers = 1,
                                               method = 'powell',
                                               steady_state = False,
                                               vary_params = {'LocErr' : True, 'D0' : True, 'D1' :  True, 'D2' : True, 'F0' : True, 'F1' : True, 'p01' : True, 'p02' : True, 'p10' : True,'p12' :  True,'p20' :  True, 'p21' : True, 'pBL' : True},
