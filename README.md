@@ -17,8 +17,6 @@ https://pypi.org/project/extrack/
 
 Optional: jupyter, cupy
 
-For GPU parallelization, cupy can be installed as described here : https://github.com/cupy/cupy. The cupy version will depend on your cuda version which itself must be compatible with your GPU driver and GPU. Usage of cupy requires a change in the module extrack/tracking (line 4) : GPU_computing = True
-
 # Installation (from pip)
 
 ## Install dependencies
@@ -103,6 +101,8 @@ This program is released under the GNU General Public License version 3 or upper
 
 Multiple CPU Parallelization can be performed in get_2DSPT_params with the argument worker the number of cores used for the job (equal to 1 by default).
 Warning: Do not work on windows.
+
+GPU parallelization used to be available but may not be compatible with the current CPU parallelization, GPU parallelization uses the package cupy which can be installed as described here : https://github.com/cupy/cupy. The cupy version will depend on your cuda version which itself must be compatible with your GPU driver and GPU. Usage of cupy requires a change in the module extrack/tracking (line 4) : GPU_computing = True
 
 # Deploying (developer only)
 
