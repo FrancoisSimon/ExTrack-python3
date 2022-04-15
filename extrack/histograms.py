@@ -307,8 +307,15 @@ def len_hist(all_tracks, params, dt, cell_dims=[0.5,None,None], nb_states=2, nb_
     return seg_len_hists
 
 
-def ground_truth_hist(all_Bs, nb_states = 2):
-
+def ground_truth_hist(all_Bs,
+                      nb_states = 2,
+                      long_tracks = False, # return hist from long tracks only
+                      nb_steps_lim = 20): # if long_tracks = True minimum track length considered
+    
+    if long_tracks:
+        for i, l in enumerate(all_Bs):
+            if int(l) < nb_steps_lim:
+                del all_Bs[l]
     seg_len_hists = np.zeros((np.max(np.array(list(all_Bs.keys())).astype(int)),nb_states))
     
     for i, l in enumerate(all_Bs):
