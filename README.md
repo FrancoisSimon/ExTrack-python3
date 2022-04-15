@@ -31,11 +31,17 @@ For GPU parallelization, cupy can be installed as described here : https://githu
 
 `pip install extrack`
 
+https://pypi.org/project/extrack/
+
+## Input file format
+
+all_tracks: dict describing the tracks with track length as keys (number of time positions, e.g. '23') of 3D arrays: dim 0 = track, dim 1 = time position, dim 2 = x, y position.
+
 # Tutorial
 
 See either:
 - tests/test_extrack.py
-- or tests/tutorial_extrack.ipynb 
+- or tests/tutorial_extrack.ipynb
 These contain the most important functions. The .ipynb file is more didactic. One has to install jupyter to use it: `pip install jupyter`.
 the tutorial files including the files containing tracks must be downloaded from this repository in order to do the tutorial.
 
@@ -72,10 +78,6 @@ extrack.exporters.save_extrack_2_xml : save extrack data to xml file (trackmate 
 extrack.visualization.visualize_tracks : show all tracks in a single plot.
 
 extrack.visualization.plot_tracks : show the longest tracks on separated plots
-
-## Input file format
-
-all_tracks: dict describing the tracks with track length as keys (number of time positions, e.g. '23') of 3D arrays: dim 0 = track, dim 1 = time position, dim 2 = x, y position.
 
 ## Caveats
 
