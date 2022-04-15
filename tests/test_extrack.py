@@ -58,7 +58,7 @@ np.polyfit(np.arange(1,len(seg_len_hists))[3:15], np.log(seg_len_hists[3:15])[:,
 
 # NB : the slops do not exactly correspond to the transition rates as leaving the field of view biases the dataset but the decay is still linear
 
-# simulation of fiewer tracks to plot them and their annotation infered by ExTrack :
+# simulation of fewer tracks to plot them and their annotation infered by ExTrack :
 
 all_tracks, all_Bs = extrack.simulate_tracks.sim_FOV(nb_tracks=500,
                                                      max_track_len=60,
