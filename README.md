@@ -99,6 +99,11 @@ This program is released under the GNU General Public License version 3 or upper
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Parallelization
+
+Multiple CPU Parallelization can be performed in get_2DSPT_params with the argument worker the number of cores used for the job (equal to 1 by default).
+Warning: Do not work on windows.
+
 # Deploying (developer only)
 
 # Authors
