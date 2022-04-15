@@ -1,7 +1,14 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Apr  4 13:23:30 2022
+
+@author: francois
+"""
+
 # -*- coding: utf-8 -*-
 """
 Created on Fri Apr  1 11:28:38 2022
-
 @author: Franc
 """
 
@@ -17,12 +24,15 @@ else :
     def asnumpy(x):
         return np.array(x)
 
+from scipy import linalg
 import itertools
 import scipy
 from lmfit import minimize, Parameters
 
 import multiprocessing
 from itertools import product
+
+from time import time
 
 '''
 Maximum likelihood to determine transition rates :
@@ -58,7 +68,7 @@ def log_integrale_dif(Ci, l2, cur_d2s, m_arr, s2_arr):
     dim 1 : possible sequences of states
     dim 2 : x,y (z)
     '''
-   l2_plus_s2_arr = l2+s2_arr
+    l2_plus_s2_arr = l2+s2_arr
     new_m = (m_arr*l2 + Ci*s2_arr)/(l2+s2_arr)
     new_s2 = ((cur_d2s*l2 + cur_d2s*s2_arr + l2*s2_arr)/l2_plus_s2_arr)
     new_K = m_arr.shape[2] * -0.5*cp.log(2*np.pi*(l2_plus_s2_arr[:,:,0])) - cp.sum((Ci-m_arr)**2/(2*l2_plus_s2_arr),axis = 2)
@@ -72,7 +82,7 @@ def first_log_integrale_dif(Ci, l2, cur_d2s):
     m_arr = Ci
     return m_arr, s2_arr
 
-def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5], nb_substeps=1, frame_len = 6, do_preds = 0, min_len = 3) :
+def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_dims = [0.5], nb_substeps=3, frame_len = 3, do_preds = 0, min_len = 3) :
     '''
     compute the product of the integrals over Ri as previousily described
     work in log space to avoid overflow and underflow
@@ -107,8 +117,9 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
     if nb_locs < 2:
         raise ValueError('minimal track length = 2, here track length = %s'%nb_locs)
     
-    all_Bs = get_all_Bs(np.min([(nb_locs-1)*nb_substeps+1, frame_len + nb_substeps - 1]), nb_states)[None]
+    all_Bs = get_all_Bs(frame_len + nb_substeps, nb_states)[None]
     
+    sub_Bs = get_all_Bs(nb_substeps, nb_states)[None]
     TrMat = cp.array(TrMat.T)
     current_step = 1
     
@@ -129,10 +140,12 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
     LP = cp.repeat(LP, nb_Tracks, axis = 0)
     cur_d2s = ds[cur_states]**2
     cur_d2s = (cur_d2s[:,:,1:] + cur_d2s[:,:,:-1]) / 2 # assuming a transition at the middle of the substeps
+
     # we can average the variances of displacements per step to get the actual std of displacements per step
     cur_d2s = cp.mean(cur_d2s, axis = 2)
     cur_d2s = cur_d2s[:,:,None]
     cur_d2s = cp.array(cur_d2s)
+    cur_d2s**0.5
     
     sub_Bs = cur_Bs.copy()[:,:cur_Bs.shape[1]//nb_states,:nb_substeps] # list of possible current states we can meet to compute the proba of staying in the FOV
     sub_ds = cp.mean(ds[sub_Bs]**2, axis = 2)**0.5 # corresponding list of d
@@ -148,15 +161,31 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
     
     # inject the first position to get the associated m_arr and Ks :
     m_arr, s2_arr = first_log_integrale_dif(Cs[:,:, nb_locs-current_step], LocErr2, cur_d2s)
-    current_step += 1
     m_arr = cp.repeat(m_arr, cur_nb_Bs, axis = 1)
     removed_steps = 0
+    
+    if nb_substeps > 1 and 0:
+        cur_len = nb_substeps + 1
+        fuse_pos = np.arange(1,nb_substeps)
+        m_arr, s2_arr, LP, cur_Bs = fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs,Cs[:,:,0],LocErr2, cur_len, nb_Tracks, fuse_pos = fuse_pos, nb_states = nb_states, nb_dims = nb_dims)
+    
+    current_step += 1
+
+    m_arr.shape
+    s2_arr.shape
+    LP.shape
+    cur_Bs.shape
+    
+    np.sum(np.exp(LP), 1)
+    
     #TrMat = np.array([[0.9,0.1],[0.2,0.8]])
     while current_step <= nb_locs-1:
         # update cur_Bs to describe the states at the next step :
         #cur_Bs = get_all_Bs(current_step*nb_substeps+1 - removed_steps, nb_states)[None]
-        cur_Bs = all_Bs[:,:nb_states**(current_step*nb_substeps+1 - removed_steps),:current_step*nb_substeps+1 - removed_steps]
         
+        #cur_Bs = all_Bs[:,:nb_states**(current_step + nb_substeps - removed_steps),:current_step + nb_substeps - removed_steps]
+        cur_Bs = all_Bs[:,:nb_states**(cur_Bs.shape[-1] + nb_substeps),:cur_Bs.shape[-1] + nb_substeps]
+  
         cur_states = cur_Bs[:,:,0:nb_substeps+1].astype(int)
         # compute the vector of diffusion stds knowing the states at the current step
         cur_d2s = ds[cur_states]**2
@@ -164,7 +193,7 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
         cur_d2s = cp.mean(cur_d2s, axis = 2)
         cur_d2s = cur_d2s[:,:,None]
         LT = get_Ts_from_Bs(cur_states, TrMat)
-
+        
         #np.arange(32)[None][:,TT]
         #np.arange(32)[None][:,1:][:,TT[:-1]]
         # repeat the previous matrix to account for the states variations due to the new position
@@ -174,6 +203,7 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
         # inject the next position to get the associated m_arr, s2_arr and Constant describing the integral of 3 normal laws :
         m_arr, s2_arr, LC = log_integrale_dif(Cs[:,:,nb_locs-current_step], LocErr2, cur_d2s, m_arr, s2_arr)
         #print('integral',time.time() - t0); t0 = time.time()
+        
         if current_step >= min_len :
             LL = Lp_stay[np.argmax(np.all(cur_states[:,None,:,:-1] == sub_Bs[:,:,None],-1),1)] # pick the right proba of staying according to the current states
         else:
@@ -181,17 +211,25 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
         
         LP += LT + LC + LL # current (log) constants associated with each track and sequences of states
         del LT, LC
+        
+        if nb_substeps > 1 and 0:
+            cur_len = cur_Bs.shape[-1]
+            fuse_pos = np.arange(1,nb_substeps)+nb_substeps
+            #m_arr, s2_arr, LP, cur_Bs = fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs, cur_len, nb_Tracks, fuse_pos = fuse_pos, nb_states = nb_states, nb_dims = nb_dims)
+            m_arr, s2_arr, LP, cur_Bs = fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs,Cs[:,:,nb_locs-current_step-2], LocErr2, cur_len, nb_Tracks, fuse_pos, nb_states = nb_states, nb_dims = nb_dims)
+
         cur_nb_Bs = len(cur_Bs[0]) # current number of sequences of states
         
         ''''idea : the position and the state 6 steps ago should not impact too much the 
         probability of the next position so the m_arr and s2_arr of tracks with the same 6 last 
         states must be very similar, we can then fuse the parameters of the pairs of Bs
         which vary only for the last step (7) and sum their probas'''
+        
         if current_step < nb_locs-1:
             while cur_nb_Bs >= nb_states**frame_len:
                 if do_preds :
                     new_s2_arr = cp.array((s2_arr + LocErr2))[:,:,0]
-                    log_integrated_term = -cp.log(2*np.pi*new_s2_arr) - cp.sum((Cs[:,:,nb_locs-current_step] - m_arr)**2,axis=2)/(2*new_s2_arr)
+                    log_integrated_term = -cp.log(2*np.pi*new_s2_arr) - cp.sum((Cs[:,:,nb_locs-current_step-1] - m_arr)**2,axis=2)/(2*new_s2_arr)
                     LF = 0 #cp.log(Fs[cur_Bs[:,:,0].astype(int)]) # Log proba of starting in a given state (fractions)
                     
                     test_LP = LP + log_integrated_term + LF
@@ -204,16 +242,22 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
                     for state in range(nb_states):
                         B_is_state = cur_Bs[:,:,-1] == state
                         preds[:,nb_locs-current_step+frame_len-2, state] = asnumpy(np.sum(B_is_state*P,axis = 1)/np.sum(P,axis = 1))
-                cur_Bs = cur_Bs[:,:cur_nb_Bs//nb_states, :-1]
-                m_arr, s2_arr, LP = fuse_tracks(m_arr, s2_arr, LP, cur_nb_Bs, nb_states)
+                
+                #cur_Bs = cur_Bs[:,:cur_nb_Bs//nb_states, :-1]
+                #m_arr, s2_arr, LP = fuse_tracks(m_arr, s2_arr, LP, cur_nb_Bs, nb_states)
+                
+                #m_arr_1, s2_arr_1, LP_1 = fuse_tracks(m_arr, s2_arr, LP, cur_nb_Bs, nb_states)
+                
+                cur_len = cur_Bs.shape[-1]
+                fuse_pos = np.arange(cur_len-1,cur_len)
+                #m_arr_2, s2_arr_2, LP_2, cur_Bs_2 = fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs, cur_len, nb_Tracks, fuse_pos, nb_states = nb_states, nb_dims = nb_dims)
+                #m_arr, s2_arr, LP, cur_Bs = fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs, cur_len, nb_Tracks, fuse_pos, nb_states = nb_states, nb_dims = nb_dims)
+                m_arr, s2_arr, LP, cur_Bs = fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs,Cs[:,:,nb_locs-current_step-2], LocErr2, cur_len, nb_Tracks, fuse_pos, nb_states = nb_states, nb_dims = nb_dims)
                 cur_nb_Bs = len(cur_Bs[0])
                 removed_steps += 1
         #print('frame',time.time() - t0)
         #print(current_step,time.time() - t0)
         current_step += 1
-
-    all_Bs.shape
-    cur_Bs.shape
     
     if not isBL:
         LL = 0
@@ -253,6 +297,7 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
         preds = preds[:,::-1]
     return LP, cur_Bs, preds
 
+
 def fuse_tracks(m_arr, s2_arr, LP, cur_nb_Bs, nb_states = 2):
     '''
     The probabilities of the pairs of tracks must be added
@@ -270,7 +315,7 @@ def fuse_tracks(m_arr, s2_arr, LP, cur_nb_Bs, nb_states = 2):
         LPk.append(LP[:, k*I:(k+1)*I])# LP of which the last state is k
         m_arr_k.append(m_arr[:, k*I:(k+1)*I])# m_arr of which the last state is k
         s2_arr_k.append(s2_arr[:, k*I:(k+1)*I])# s2_arr of which the last state is k
-        
+
     LPk = cp.array(LPk)
     m_arr_k = cp.array(m_arr_k)
     s2_arr_k = cp.array(s2_arr_k)
@@ -291,7 +336,129 @@ def fuse_tracks(m_arr, s2_arr, LP, cur_nb_Bs, nb_states = 2):
     # cur_Bs = cur_Bs[:,:I, :-1]
     # np.mean(np.abs(m_arr0-m_arr1)) # to verify how far they are, I found a difference of 0.2nm for D = 0.1um2/s, LocErr=0.02um and 6 frames
     # np.mean(np.abs(s2_arr0-s2_arr1))
-    return m_arr, s2_arr, LP
+    return m_arr, s2_arr, LP, 
+
+'''
+t0 = time()
+for k in range(1000):
+    fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs, cur_len, nb_Tracks, fuse_pos, nb_states = 2, nb_dims = 2)
+print(time()-t0)
+
+
+t0 = time()
+for k in range(10000):
+    fuse_tracks(m_arr, s2_arr, LP, cur_nb_Bs, nb_states)
+print(time()-t0)
+'''
+'''
+a = get_all_Bs(8 , nb_states)
+a.reshape([2,2,2,2,2,2,2,2,4])[np.arange(2)[:,None],:,:,np.arange(2)[None]]
+np.product([2,2,2,2,2,2,2,2,8])
+t0 = time()
+for k in range(10000):
+    a = get_all_Bs(8 , nb_states)
+    b = a.reshape([2,2,2,2,2,2,2,2,8])
+    b = a.reshape([2,2,2,2**5,8])
+    a.reshape([2,2,2,2,2,2,2,2,8])[:,:,:,:,0,:,:,0]
+b.shape
+np.mean(b, (1,2),keepdims = True).shape
+    a.reshape([2,2,2,2,2,2,2,2,8])[:,:,:,:,0,:,:,0]
+np.mean(a.reshape((2**6, 2,2, 8)), 1)
+t0 = time()
+for k in range(1000000):
+    b = a.reshape([2,2,2,2**5,8])
+print(time()-t0)
+[2,2,2,2,4]
+a.reshape(2,4,2,4)
+a.shape
+m_arr.shape
+s2_arr.shape
+LP.shape
+fuse_pos = np.array([1,2,4])
+cur_Bs.shape
+s2_arr.shape
+m_arr.shape
+LP.shape
+'''
+def fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs, Ci,LocErr2, cur_len, nb_Tracks, fuse_pos, nb_states = 2, nb_dims = 2):
+    '''
+    The probabilities of the pairs of tracks must be added
+    I chose to define the updated m_arr and s2_arr as the weighted average (of the variance for s2_arr)
+    but other methods may be better
+    As I must divid by a sum of exponentials which can be equal to zero because of underflow
+    I correct the values in the exponetial to keep the maximal exp value at 0
+    '''
+    # cut the matrixes so the resulting matrices only vary for their last state
+    '''
+    if s2_arr.shape[0] ==1:
+        s2_arr = np.repeat(s2_arr, nb_Tracks, axis = 0)
+    s2_arr_iplus1 = cp.array((s2_arr + LocErr2))[:,:,0]
+    log_integrated_term = -cp.log(2*np.pi*s2_arr_iplus1) - cp.sum((Ci - m_arr)**2,axis=2)/(2*s2_arr_iplus1)
+    #'''
+    fuse_idx = np.zeros(cur_len)
+    fuse_idx[fuse_pos] = 1
+        
+    dims = [nb_states]
+    if fuse_idx[0] == 0:
+        remove_axis = [0]
+    else:
+        remove_axis = [1]
+    previous_idx = fuse_idx[0]
+    for idx in fuse_idx[1:]:
+        if idx == 1:
+            dims.append(nb_states)
+            remove_axis.append(1)
+        else:
+            if previous_idx == 1:
+                dims.append(nb_states)
+                remove_axis.append(0)
+            else:
+                dims[-1] = dims[-1] * nb_states
+        previous_idx = idx
+    
+    dims.reverse() # we need to reverse the list to get the good order because of the way the array indexes are working
+    remove_axis.reverse()
+        
+    rm_axis = np.where(np.array(remove_axis))
+    rm_axis = tuple(rm_axis[0]+1) # we add 1 as the first dim of our arrays is for the track ID
+    
+    new_LP = LP.reshape([nb_Tracks] + dims)
+    max_LP = new_LP.max(axis = rm_axis,keepdims = True)
+    #log_integrated_term = log_integrated_term.reshape([nb_Tracks] + dims)
+    #max_LP2 = (new_LP + log_integrated_term).max(axis = rm_axis,keepdims = True)
+    #norm_weights = np.exp(new_LP + log_integrated_term - max_LP2)
+    norm_weights = np.exp(new_LP - max_LP)
+    Sum_weights = np.sum(norm_weights, axis = rm_axis, keepdims = True)
+    weights = norm_weights / Sum_weights
+    weights = weights.reshape(weights.shape + (1,)) # add a dim for weights to fit the shape of m_arr and s2_arr
+
+    m_arr = m_arr.reshape([nb_Tracks] + dims + [nb_dims])
+    s2_arr = s2_arr.reshape([s2_arr.shape[0]] + dims + [1])
+    new_m_arr = np.sum(weights * m_arr, axis = rm_axis)
+    new_s2_arr = np.sum(weights * s2_arr , axis = rm_axis)
+    '''
+    indices = (norm_weights == np.max(norm_weights, axis = rm_axis, keepdims = True))
+    new_m_arr = m_arr[indices].reshape((nb_Tracks, final_nb_Bs, nb_dims))
+    new_s2_arr =  s2_arr[indices].reshape((s2_arr.shape[0], final_nb_Bs, 1))
+    '''
+    LP = LP.reshape([nb_Tracks] + dims)
+    new_LP = np.log(np.sum(np.exp(LP-max_LP), axis = rm_axis)) + np.squeeze(max_LP, axis = rm_axis)
+
+    #np.mean(np.std(m_arr, axis = rm_axis))
+    #np.mean(np.std(s2_arr**0.5, axis = rm_axis))
+    #np.mean(np.std(s2_arr**0.5))
+    new_cur_Bs = cur_Bs.reshape([1] + dims + [cur_len])
+    for i, axis in enumerate(rm_axis):
+        new_cur_Bs = np.take(new_cur_Bs, indices = 0, axis = axis -  i)
+    new_cur_Bs = np.delete(new_cur_Bs , tuple(fuse_pos), axis =  -1)
+    new_cur_Bs = new_cur_Bs.reshape((1, np.product(new_cur_Bs.shape[1:-1]), cur_len - len(fuse_pos)))
+
+    new_m_arr = new_m_arr.reshape((nb_Tracks, np.product(new_m_arr.shape[1:-1]), nb_dims))
+    new_s2_arr = new_s2_arr.reshape((new_s2_arr.shape[0], np.product(new_s2_arr.shape[1:-1]), 1))
+    new_LP = new_LP.reshape((nb_Tracks, np.product(new_LP.shape[1:])))
+    
+    return new_m_arr, new_s2_arr, new_LP, new_cur_Bs
+
 
 def get_all_Bs(nb_Cs, nb_states):
     '''
@@ -326,6 +493,7 @@ def Proba_Cs(Cs, LocErr, ds, Fs, TrMat,pBL,isBL, cell_dims, nb_substeps, frame_l
     '''
 
     LP_CB, _, _  = P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL,isBL,cell_dims, nb_substeps, frame_len, do_preds = 0,  min_len = min_len)
+    np.sum(LP_CB)
     # calculates P(C) the sum of P(C inter B) for each track
     max_LP = np.max(LP_CB, axis = 1, keepdims = True)
     LP_CB = LP_CB - max_LP
@@ -409,9 +577,31 @@ def extract_params(params, dt, nb_states, nb_substeps):
     
     TrMat = TrMat/nb_substeps
     
-
-    TrMat = 1 - np.exp(-TrMat)
-    TrMat[np.arange(len(Ds)), np.arange(len(Ds))] = 1-np.sum(TrMat,1)
+    case = 1
+    if case == 0:
+        TrMat[np.arange(len(Ds)), np.arange(len(Ds))] = 1-np.sum(TrMat,1)
+    if case == 1: # 1 - exp(-)
+        TrMat = 1 - np.exp(-TrMat)
+        TrMat[np.arange(len(Ds)), np.arange(len(Ds))] = 1-np.sum(TrMat,1)
+    elif case == 2:
+        TrMat[np.arange(len(Ds)), np.arange(len(Ds))] = -np.sum(TrMat,1)
+        TrMat = linalg.expm(TrMat)
+    elif case == 3:
+        TrMat[np.arange(len(Ds)), np.arange(len(Ds))] = 0
+        G = np.copy(TrMat)
+        TrMat[np.arange(len(Ds)), np.arange(len(Ds))] = 1-np.sum(TrMat,1)
+        G[np.arange(len(Ds)), np.arange(len(Ds))] = -np.sum(G,1)
+        TrMatG = linalg.expm(G)
+        TrMat = np.mean([TrMat, TrMatG], axis = 0)
+    elif case == 4:
+        TrMat[np.arange(len(Ds)), np.arange(len(Ds))] = 0
+        G = np.copy(TrMat)
+        TrMat[np.arange(len(Ds)), np.arange(len(Ds))] = 1-np.sum(TrMat,1)
+        G[np.arange(len(Ds)), np.arange(len(Ds))] = -np.sum(G,1)
+        TrMatG = linalg.expm(G)
+        TrMat = (TrMat* TrMatG)**0.5  
+    #TrMat = 1 - np.exp(-TrMat)
+    #TrMat[np.arange(len(Ds)), np.arange(len(Ds))] = 1-np.sum(TrMat,1)
     
     #print(TrMat)
     ds = np.sqrt(2*Ds*dt)
@@ -425,9 +615,6 @@ def run_pool(pool_star_proba, args_prod, workers):
         LP = pool.map(pool_star_proba, args_prod)
     return LP
 
-def f(x):
-    return x*x
-
 def cum_Proba_Cs(params, all_tracks, dt, cell_dims, nb_states, nb_substeps, frame_len, verbose = 1, workers = 1):
     '''
     each probability can be multiplied to get a likelihood of the model knowing
@@ -436,6 +623,7 @@ def cum_Proba_Cs(params, all_tracks, dt, cell_dims, nb_states, nb_substeps, fram
     state 0 to 1 and p10 the proba of transition from state 1 to 0.
     here sum the logs(likelihood) to avoid too big numbers
     '''
+    t0 = time()
     LocErr, ds, Fs, TrMat, pBL = extract_params(params, dt, nb_states, nb_substeps)
     min_len = all_tracks[0].shape[1]
     
@@ -460,10 +648,11 @@ def cum_Proba_Cs(params, all_tracks, dt, cell_dims, nb_states, nb_substeps, fram
         args_prod = np.array(list(product(Csss, [LocErr], [ds], [Fs], [TrMat],[pBL], [0],[cell_dims], [nb_substeps], [frame_len], [min_len])))
         args_prod[:, 6] = isBLs
         
+        Cs, LocErr, ds, Fs, TrMat,pBL,isBL, cell_dims, nb_substeps, frame_len, min_len = args_prod[0]
+        
         if workers >= 2:
             with multiprocessing.Pool(workers) as pool:
                 LP = pool.map(pool_star_proba, args_prod)
-
         else:
             LP = []
             for args in args_prod:
@@ -484,6 +673,7 @@ def cum_Proba_Cs(params, all_tracks, dt, cell_dims, nb_states, nb_substeps, fram
     if out == np.nan:
         out = 1e100
         print('inputs give nans')
+    #print(time() - t0)
     return out
 
 def get_params(nb_states = 2,
@@ -550,10 +740,11 @@ def get_params(nb_states = 2,
                             {'name' : 'p12', 'value' : estimated_vals['p12'], 'min' : min_values['p12'], 'max' : max_values['p12'], 'vary' : vary_params['p12']},
                             {'name' : 'p20', 'value' : estimated_vals['p20'], 'min' : min_values['p20'], 'max' : max_values['p20'], 'vary' : vary_params['p20']},
                             {'name' : 'p21', 'value' : estimated_vals['p21'], 'min' : min_values['p21'], 'max' : max_values['p21'], 'vary' : vary_params['p21']},
-                            {'name' : 'F0', 'value' : estimated_vals['F0'], 'min' : min_values['F0'], 'max' : max_values['F0'], 'vary' : vary_params['F0']},
+                            #{'name' : 'F0', 'value' : estimated_vals['F0'], 'min' : min_values['F0'], 'max' : max_values['F0'], 'vary' : vary_params['F0']},
                             #{'name' : 'F1_minus_F0', 'value' : (estimated_vals['F1'])/(1-estimated_vals['F0']), 'min' : min_values['F1'], 'max' : max_values['F1'], 'vary' : vary_params['F1']},
                             #{'name' : 'F1', 'expr' : 'F1_minus_F0*(1-F0)'},
-                            {'name' : 'F1', 'value' : estimated_vals['F1'], 'min' : min_values['F1'], 'max' : max_values['F1'], 'vary' : vary_params['F1']},
+                            {'name' : 'F0', 'value' : estimated_vals['F0'], 'min' : min_values['F0'], 'max' : max_values['F0'], 'vary' : vary_params['F0']},
+                            {'name' : 'F1', 'value' : estimated_vals['F0'], 'min' : min_values['F0'], 'max' : max_values['F0'], 'vary' : vary_params['F0']},
                             {'name' : 'F2', 'expr' : '1-F0-F1'},
                             {'name' : 'pBL', 'value' : estimated_vals['pBL'], 'min' :  min_values['pBL'], 'max' :  max_values['pBL'], 'vary' : vary_params['pBL']}]
     else :
@@ -610,7 +801,6 @@ def get_2DSPT_params(all_tracks,
                      max_values = {'LocErr' : 0.6, 'D0' : 1, 'D1' : 10, 'F0' : 0.999, 'p01' : 1., 'p10' : 1., 'pBL' : 0.99}):
     '''
     fitting the parameters to the data set
-
     arguments:
     all_tracks: dict describing the tracks with track length as keys (number of time positions, e.g. '23') of 3D arrays: dim 0 = track, dim 1 = time position, dim 2 = x, y position.
     dt: time in between frames.
@@ -624,7 +814,6 @@ def get_2DSPT_params(all_tracks,
     estimated_vals: initial values of the fit. (stay constant if parameter fixed by vary_params). estimated_vals must be in between min_values and max_values even if fixed.
     min_values: minimal values for the fit.
     max_values: maximal values for the fit.
-
     outputs:
     model_fit: lmfit model
     
