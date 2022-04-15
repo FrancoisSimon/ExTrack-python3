@@ -31,6 +31,8 @@ Optional: jupyter, cupy
 
 https://pypi.org/project/extrack/
 
+the version 1.4 has an oudated version for the histograms script, replace it with histograms.py from the git repository if you want it to work correctly.
+
 ## Input file format
 
 all_tracks: dict describing the tracks with track length as keys (number of time positions, e.g. '23') of 3D arrays: dim 0 = track, dim 1 = time position, dim 2 = x, y position.
