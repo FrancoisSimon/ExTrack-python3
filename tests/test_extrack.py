@@ -9,7 +9,7 @@ dt = 0.02
 
 # simulate tracks able to come and leave from the field of view :
 
-all_tracks, all_Bs = extrack.simulate_tracks.sim_FOV(nb_tracks=40000,
+all_tracks, all_Bs = extrack.simulate_tracks.sim_FOV(nb_tracks=10000,
                                                      max_track_len=60,
                                                      LocErr=0.02,
                                                      Ds = np.array([0,0.5]),
@@ -25,8 +25,8 @@ all_tracks, all_Bs = extrack.simulate_tracks.sim_FOV(nb_tracks=40000,
 model_fit = extrack.tracking.get_2DSPT_params(all_tracks,
                                               dt,
                                               cell_dims = [1],
-                                              nb_substeps = 1,
-                                              nb_states = 2,
+                                              nb_substeps = 2,
+                                              nb_states = 7,
                                               frame_len = 6,
                                               verbose = 1,
                                               method = 'powell',
