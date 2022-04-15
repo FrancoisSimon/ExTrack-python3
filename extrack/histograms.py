@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 """
 Created on Thu Nov 11 17:01:56 2021
-
 @author: francois
 """
 
@@ -19,8 +19,8 @@ else :
         return np.array(x)
 
 import scipy
-from extrack.tracking import extract_params, get_all_Bs, get_Ts_from_Bs, first_log_integrale_dif, log_integrale_dif
-def P_segment_len(Cs, LocErr, ds, Fs, TrMat, min_l = 5, pBL=0.1, isBL = 1, cell_dims = [0.5], nb_substeps=1, max_nb_states = 1000) :
+#from extrack.tracking import extract_params, get_all_Bs, get_Ts_from_Bs, first_log_integrale_dif, log_integrale_dif
+def P_segment_len(Cs, LocErr, ds, Fs, TrMat, min_l = 3, pBL=0.1, isBL = 1, cell_dims = [0.5], nb_substeps=1, max_nb_states = 1000) :
     '''
     compute the product of the integrals over Ri as previousily described
     work in log space to avoid overflow and underflow
@@ -29,13 +29,13 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, min_l = 5, pBL=0.1, isBL = 1, cell_
     dim 3 : x, y position
     
     we process by steps, at each step we account for 1 more localization, we compute
-    the canstant (LC), the mean (Km) and std (Ks) of of the normal distribution 
+    the canstant (LC), the mean (m_arr) and std (s2_arr) of of the normal distribution 
     resulting from integration.
     
     each step is made of substeps if nb_substeps > 1, and we increase the matrix
     of possible Bs : cur_Bs accordingly
     
-    to be able to process long tracks with good accuracy, for each track we fuse Km and Ks
+    to be able to process long tracks with good accuracy, for each track we fuse m_arr and s2_arr
     of sequences of states equal exept for the state 'frame_len' steps ago.
     '''
     nb_Tracks = Cs.shape[0]
@@ -45,7 +45,8 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, min_l = 5, pBL=0.1, isBL = 1, cell_
     Cs = cp.array(Cs)
     nb_states = TrMat.shape[0]
     Cs = Cs[:,:,::-1]
-        
+    LocErr2 = LocErr**2
+    
     cell_dims = np.array(cell_dims)
     cell_dims = cell_dims[cell_dims!=None]
     
@@ -58,12 +59,13 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, min_l = 5, pBL=0.1, isBL = 1, cell_
         cur_states = get_all_Bs(1, nb_states)[None] #states of interest for the current displacement
         cur_Bs = get_all_Bs(2, nb_states)[None]
         
-        cur_ds = ds[cur_Bs]
-        cur_ds = (cur_ds[:,:,1:]**2 + cur_ds[:,:,:-1]**2)**0.5 / 2**0.5 # assuming a transition at the middle of the substeps
+        cur_d2s = ds[cur_states]**2
+        cur_d2s = (cur_d2s[:,:,1:] + cur_d2s[:,:,:-1]) / 2 # assuming a transition at the middle of the substeps
+        
         # we can average the variances of displacements per step to get the actual std of displacements per step
-        cur_ds = cp.mean(cur_ds**2, axis = 2)**0.5
-        cur_ds = cur_ds[:,:,None]
-        cur_ds = cp.array(cur_ds)
+        cur_d2s = cp.mean(cur_d2s, axis = 2)
+        cur_d2s = cur_d2s[:,:,None]
+        cur_d2s = cp.array(cur_d2s)
         
         sub_Bs = cur_Bs.copy()[:1,:cur_Bs.shape[1]//nb_states,:nb_substeps] # list of possible current states we can meet to compute the proba of staying in the FOV
         sub_ds = cp.mean(ds[sub_Bs]**2, axis = 2)**0.5 # corresponding list of d
@@ -98,12 +100,13 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, min_l = 5, pBL=0.1, isBL = 1, cell_
         LL = np.zeros(LP.shape)
         # current log proba of seeing the track
         #LP = cp.repeat(LP, nb_Tracks, axis = 0)
-        cur_ds = ds[cur_states]
-        cur_ds = (cur_ds[:,:,1:]**2 + cur_ds[:,:,:-1]**2)**0.5 / 2**0.5 # assuming a transition at the middle of the substeps
+        cur_d2s = ds[cur_states]**2
+        cur_d2s = (cur_d2s[:,:,1:] + cur_d2s[:,:,:-1]) / 2 # assuming a transition at the middle of the substeps
+    
         # we can average the variances of displacements per step to get the actual std of displacements per step
-        cur_ds = cp.mean(cur_ds**2, axis = 2)**0.5
-        cur_ds = cur_ds[:,:,None]
-        cur_ds = cp.array(cur_ds)
+        cur_d2s = cp.mean(cur_d2s, axis = 2)
+        cur_d2s = cur_d2s[:,:,None]
+        cur_d2s = cp.array(cur_d2s)
         
         sub_Bs = cur_Bs.copy()[:1,:cur_Bs.shape[1]//nb_states,:nb_substeps] # list of possible current states we can meet to compute the proba of staying in the FOV
         sub_ds = cp.mean(ds[sub_Bs]**2, axis = 2)**0.5 # corresponding list of d
@@ -118,10 +121,10 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, min_l = 5, pBL=0.1, isBL = 1, cell_
         if current_step >= min_l:
             LL = LL + Lp_stay[np.argmax(np.all(cur_states[:,None,:,:-1] == sub_Bs[:,:,None],-1),1)] # pick the right proba of staying according to the current states
 
-        # inject the first position to get the associated Km and Ks :
-        Km, Ks = first_log_integrale_dif(Cs[:,:, nb_locs-current_step], LocErr, cur_ds)
+        # inject the first position to get the associated m_arr and s2_arr :
+        m_arr, s2_arr = first_log_integrale_dif(Cs[:,:, nb_locs-current_step], LocErr2, cur_d2s)
         current_step += 1
-        Km = cp.repeat(Km, cur_nb_Bs, axis = 1)
+        m_arr = cp.repeat(m_arr, cur_nb_Bs, axis = 1)
         removed_steps = 0
         
         while current_step <= nb_locs-1:
@@ -133,20 +136,22 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, min_l = 5, pBL=0.1, isBL = 1, cell_
             
             cur_states = cur_Bs[:,:,0:nb_substeps+1].astype(int)
             # compute the vector of diffusion stds knowing the states at the current step
-            cur_ds = ds[cur_states]
-            cur_ds = (cur_ds[:,:,1:]**2 + cur_ds[:,:,:-1]**2)**0.5 / 2**0.5 # assuming a transition at the middle of the substeps
-            cur_ds = cp.mean(cur_ds**2, axis = 2)**0.5
-            cur_ds = cur_ds[:,:,None]
-            
+            cur_d2s = ds[cur_states]**2
+            cur_d2s = (cur_d2s[:,:,1:] + cur_d2s[:,:,:-1]) / 2 # assuming a transition at the middle of the substeps
+        
+            # we can average the variances of displacements per step to get the actual std of displacements per step
+            cur_d2s = cp.mean(cur_d2s, axis = 2)
+            cur_d2s = cur_d2s[:,:,None]
+            cur_d2s = cp.array(cur_d2s)
             LT = get_Ts_from_Bs(cur_states, TrMat)
     
             # repeat the previous matrix to account for the states variations due to the new position
-            Km = cp.repeat(Km, nb_states**nb_substeps , axis = 1)
-            Ks = cp.repeat(Ks, nb_states**nb_substeps, axis = 1)
+            m_arr = cp.repeat(m_arr, nb_states**nb_substeps , axis = 1)
+            s2_arr = cp.repeat(s2_arr, nb_states**nb_substeps, axis = 1)
             LP = cp.repeat(LP, nb_states**nb_substeps, axis = 1)
             LL = cp.repeat(LL, nb_states**nb_substeps, axis = 1)
-            # inject the next position to get the associated Km, Ks and Constant describing the integral of 3 normal laws :
-            Km, Ks, LC = log_integrale_dif(Cs[:,:,nb_locs-current_step], LocErr, cur_ds, Km, Ks)
+            # inject the next position to get the associated m_arr, s2_arr and Constant describing the integral of 3 normal laws :
+            m_arr, s2_arr, LC = log_integrale_dif(Cs[:,:,nb_locs-current_step], LocErr2, cur_d2s, m_arr, s2_arr)
             #print('integral',time.time() - t0); t0 = time.time()
             if current_step >= min_l :
                 LL = LL + Lp_stay[np.argmax(np.all(cur_states[:,None,:,:-1] == sub_Bs[:,:,None],-1),1)] # pick the right proba of staying according to the current states
@@ -156,14 +161,14 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, min_l = 5, pBL=0.1, isBL = 1, cell_
             cur_nb_Bs = len(cur_Bs[0]) # current number of sequences of states
             
             ''''idea : the position and the state 6 steps ago should not impact too much the 
-            probability of the next position so the Km and Ks of tracks with the same 6 last 
+            probability of the next position so the m_arr and s2_arr of tracks with the same 6 last 
             states must be very similar, we can then fuse the parameters of the pairs of Bs
             which vary only for the last step (7) and sum their probas'''
             if current_step < nb_locs-1:
                 if cur_nb_Bs > max_nb_states:
                     
-                    newKs = cp.array((Ks**2 + LocErr**2)**0.5)[:,:,0]
-                    log_integrated_term = -cp.log(2*np.pi*newKs**2) - cp.sum((Cs[:,:,nb_locs-current_step] - Km)**2,axis=2)/(2*newKs**2)
+                    new_s2_arr = cp.array((s2_arr + LocErr2))[:,:,0]
+                    log_integrated_term = -cp.log(2*np.pi*new_s2_arr) - cp.sum((Cs[:,:,nb_locs-current_step] - m_arr)**2,axis=2)/(2*new_s2_arr)
                     LF = 0 #cp.log(Fs[cur_Bs[:,:,0].astype(int)]) # Log proba of starting in a given state (fractions)
                     
                     test_LP = LP + log_integrated_term + LF
@@ -176,8 +181,8 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, min_l = 5, pBL=0.1, isBL = 1, cell_
                     argP = P.argsort()
                     argP = argP[:,::-1]
                     
-                    Km = np.take_along_axis(Km, argP[:,:,None], axis = 1)[:,:max_nb_states]
-                    Ks = np.take_along_axis(Ks, argP[:,:,None], axis = 1)[:,:max_nb_states]
+                    m_arr = np.take_along_axis(m_arr, argP[:,:,None], axis = 1)[:,:max_nb_states]
+                    s2_arr = np.take_along_axis(s2_arr, argP[:,:,None], axis = 1)[:,:max_nb_states]
                     LP = np.take_along_axis(LP, argP, axis = 1)[:,:max_nb_states]
                     LL = np.take_along_axis(LL, argP, axis = 1)[:,-max_nb_states:]
                     cur_Bs = np.take_along_axis(cur_Bs, argP[:,:,None], axis = 1)[:,:max_nb_states]
@@ -199,8 +204,8 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, min_l = 5, pBL=0.1, isBL = 1, cell_
             LT = get_Ts_from_Bs(cur_states, TrMat)
             #cur_states = cur_states[:,:,0]
             # repeat the previous matrix to account for the states variations due to the new position
-            Km = cp.repeat(Km, nb_states**nb_substeps , axis = 1)
-            Ks = cp.repeat(Ks, nb_states**nb_substeps, axis = 1)
+            m_arr = cp.repeat(m_arr, nb_states**nb_substeps , axis = 1)
+            s2_arr = cp.repeat(s2_arr, nb_states**nb_substeps, axis = 1)
             LP = cp.repeat(LP, nb_states**nb_substeps, axis = 1)# + LT
             LL = cp.repeat(LL, nb_states**nb_substeps, axis = 1)
             #LL = Lp_stay[np.argmax(np.all(cur_states[:,None] == sub_Bs[:,:,None],-1),1)] # pick the right proba of staying according to the current states
@@ -215,8 +220,8 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, min_l = 5, pBL=0.1, isBL = 1, cell_
             cur_Bs = cur_Bs[:,:,1:]
             #isBL = 0
         
-        newKs = cp.array((Ks**2 + LocErr**2)**0.5)[:,:,0]
-        log_integrated_term = -cp.log(2*np.pi*newKs**2) - cp.sum((Cs[:,:,0] - Km)**2,axis=2)/(2*newKs**2)
+        new_s2_arr = cp.array((s2_arr + LocErr2))[:,:,0]
+        log_integrated_term = -cp.log(2*np.pi*new_s2_arr) - cp.sum((Cs[:,:,0] - m_arr)**2,axis=2)/(2*new_s2_arr)
         #LF = cp.log(Fs[cur_Bs[:,:,0].astype(int)]) # Log proba of starting in a given state (fractions)
         #LF = cp.log(0.5)
         # cp.mean(cp.log(Fs[cur_Bs[:,:,:].astype(int)]), 2) # Log proba of starting in a given state (fractions)
@@ -264,7 +269,7 @@ def P_segment_len(Cs, LocErr, ds, Fs, TrMat, min_l = 5, pBL=0.1, isBL = 1, cell_
     
     return LP, cur_Bs, seg_len_hist
 
-def len_hist(all_tracks,params, dt, cell_dims=[0.5,None,None], nb_states=2, nb_substeps=1, max_nb_states = 500):
+def len_hist(all_tracks, params, dt, cell_dims=[0.5,None,None], nb_states=2, nb_substeps=1, max_nb_states = 500):
     '''
     each probability can be multiplied to get a likelihood of the model knowing
     the parameters LocErr, D0 the diff coefficient of state 0 and F0 fraction of
