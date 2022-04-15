@@ -121,15 +121,15 @@ def is_in_FOV(positions, cell_dims):
 
 
 def sim_FOV(nb_tracks=10000,
-            max_track_len=40, 
+            max_track_len=40,
+            min_len = 2,
             LocErr=0.02,
             Ds = np.array([0,0.05]),
             initial_fractions = np.array([0.6,0.4]),
             TrMat = np.array([[0.9,0.1],[0.1,0.9]]),
             dt = 0.02,
             pBL = 0.1, 
-            cell_dims = [0.5,None,None], # dimension limits in x, y and z respectively
-            min_len = 2):
+            cell_dims = [0.5,None,None]): # dimension limits in x, y and z respectively
     '''
     simulate tracks able to come and leave from the field of view :
     
