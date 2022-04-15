@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 
 dir(extrack)
 
-dt = 0.025
+dt = 0.02
 
 # simulate tracks able to come and leave from the field of view :
 
@@ -31,8 +31,8 @@ model_fit = extrack.tracking.get_2DSPT_params(all_tracks,
                                               verbose = 1,
                                               method = 'powell',
                                               steady_state = False,
-                                              vary_params = {'LocErr' : False, 'D0' : False, 'D1' : True, 'F0' : False, 'p01' : True, 'p10' : True, 'pBL' : True},
-                                              estimated_vals = {'LocErr' : 0.020, 'D0' : 0, 'D1' : 0.5, 'F0' : 0.6, 'p01' : 0.1, 'p10' : 0.1, 'pBL' : 0.1})
+                                              vary_params = {'LocErr' : True, 'D0' : True, 'D1' : True, 'F0' : True, 'p01' : True, 'p10' : True, 'pBL' : True},
+                                              estimated_vals = {'LocErr' : 0.025, 'D0' : 0, 'D1' : 0.5, 'F0' : 0.5, 'p01' : 0.05, 'p10' : 0.05, 'pBL' : 0.05})
 
 # produce histograms of time spent in each state :
 
@@ -47,7 +47,7 @@ extrack.visualization.visualize_states_durations(all_tracks,
                                                  steps = False)
 
 # ground truth histogram (actual labeling from simulations) :
-    
+
 seg_len_hists = extrack.histograms.ground_truth_hist(all_Bs,long_tracks = True,nb_steps_lim = 20)
 
 plt.plot(np.arange(1,len(seg_len_hists)+1)[:,None]*dt, seg_len_hists/np.sum(seg_len_hists,0), ':')
@@ -99,7 +99,6 @@ extrack.visualization.plot_tracks(DATA,
                                   figsize = (10,10), 
                                   lim = 1)
 
-
 # download tracks from csv file :
 path = '/home/oem/Downloads/tracks.csv'
 all_tracks, frames, opt_metrics = extrack.readers.read_table(path,
@@ -121,7 +120,7 @@ pred_Bs = extrack.tracking.predict_Bs(all_tracks,
 
 # save as xml file used for trackmate :
 
-save_path = './tracks.xml' 
+save_path = './tracks.xml'
 extrack.exporters.save_extrack_2_xml(all_tracks, pred_Bs, model_fit.params, save_path, dt, all_frames = None, opt_metrics = opt_metrics)
 
 DATA = extrack.exporters.extrack_2_pandas(all_tracks, pred_Bs, frames = None, opt_metrics = opt_metrics)
@@ -129,6 +128,41 @@ DATA = extrack.exporters.extrack_2_pandas(all_tracks, pred_Bs, frames = None, op
 # save as csv file :
 save_path = './tracks.csv'
 DATA.to_csv(save_path)
+
+
+# simulate and fit a 3 states model
+all_tracks, all_Bs = extrack.simulate_tracks.sim_FOV(nb_tracks=40000,
+                                                     max_track_len=60,
+                                                     min_track_len = 5,
+                                                     LocErr=0.02,
+                                                     Ds = np.array([0,0.04,0.2]),
+                                                     initial_fractions = np.array([0.3,0.3,0.4]),
+                                                     TrMat = np.array([[0.85,0.1,0.05],
+                                                                       [0.1,0.8, 0.1],
+                                                                       [0.1, 0.05, 0.8]]),
+                                                     dt = dt,
+                                                     pBL = 0.1,
+                                                     cell_dims = [1,None,None]) # dimension limits in x, y and z respectively
+
+# fit parameters of the simulated tracks :
+
+model_fit = extrack.tracking.get_2DSPT_params(all_tracks,
+                                              dt,
+                                              cell_dims = [1],
+                                              nb_substeps = 1,
+                                              nb_states = 3,
+                                              frame_len = 5,
+                                              verbose = 0,
+                                              method = 'powell',
+                                              steady_state = False,
+                                              vary_params = {'LocErr' : True, 'D0' : True, 'D1' :  True, 'D2' : True, 'F0' : True, 'F1' : True, 'p01' : True, 'p02' : True, 'p10' : True,'p12' :  True,'p20' :  True, 'p21' : True, 'pBL' : True},
+                                              estimated_vals = {'LocErr' : 0.023, 'D0' : 1e-20, 'D1' : 0.02, 'D2' :  0.1, 'F0' : 0.33,  'F1' : 0.33, 'p01' : 0.1, 'p02' : 0.1, 'p10' :0.1, 'p12' : 0.1, 'p20' :0.1, 'p21' :0.1, 'pBL' : 0.1},
+                                              min_values = {'LocErr' : 0.007, 'D0' : 0, 'D1' : 0.0000001, 'D2' :  0.000001, 'F0' : 0.001,  'F1' : 0.001, 'p01' : 0.001, 'p02' : 0.001, 'p10' :0.001, 'p12' : 0.001, 'p20' :0.001, 'p21' :0.001, 'pBL' : 0.001},
+                                              max_values = {'LocErr' : 0.6, 'D0' : 1e-20, 'D1' : 1, 'D2' :  10, 'F0' : 0.999,  'F1' : 0.999, 'p01' : 1, 'p02' : 1, 'p10' : 1, 'p12' : 1, 'p20' : 1, 'p21' : 1, 'pBL' : 0.99})
+    
+
+
+
 
 
 
