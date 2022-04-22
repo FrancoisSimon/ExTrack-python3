@@ -338,48 +338,6 @@ def fuse_tracks(m_arr, s2_arr, LP, cur_nb_Bs, nb_states = 2):
     # np.mean(np.abs(s2_arr0-s2_arr1))
     return m_arr, s2_arr, LP, 
 
-'''
-t0 = time()
-for k in range(1000):
-    fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs, cur_len, nb_Tracks, fuse_pos, nb_states = 2, nb_dims = 2)
-print(time()-t0)
-
-
-t0 = time()
-for k in range(10000):
-    fuse_tracks(m_arr, s2_arr, LP, cur_nb_Bs, nb_states)
-print(time()-t0)
-'''
-'''
-a = get_all_Bs(8 , nb_states)
-a.reshape([2,2,2,2,2,2,2,2,4])[np.arange(2)[:,None],:,:,np.arange(2)[None]]
-np.product([2,2,2,2,2,2,2,2,8])
-t0 = time()
-for k in range(10000):
-    a = get_all_Bs(8 , nb_states)
-    b = a.reshape([2,2,2,2,2,2,2,2,8])
-    b = a.reshape([2,2,2,2**5,8])
-    a.reshape([2,2,2,2,2,2,2,2,8])[:,:,:,:,0,:,:,0]
-b.shape
-np.mean(b, (1,2),keepdims = True).shape
-    a.reshape([2,2,2,2,2,2,2,2,8])[:,:,:,:,0,:,:,0]
-np.mean(a.reshape((2**6, 2,2, 8)), 1)
-t0 = time()
-for k in range(1000000):
-    b = a.reshape([2,2,2,2**5,8])
-print(time()-t0)
-[2,2,2,2,4]
-a.reshape(2,4,2,4)
-a.shape
-m_arr.shape
-s2_arr.shape
-LP.shape
-fuse_pos = np.array([1,2,4])
-cur_Bs.shape
-s2_arr.shape
-m_arr.shape
-LP.shape
-'''
 def fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs, Ci,LocErr2, cur_len, nb_Tracks, fuse_pos, nb_states = 2, nb_dims = 2):
     '''
     The probabilities of the pairs of tracks must be added
