@@ -226,7 +226,7 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
         which vary only for the last step (7) and sum their probas'''
         
         if current_step < nb_locs-1:
-            while cur_nb_Bs >= nb_states**frame_len:
+            while cur_nb_Bs > nb_states**frame_len:
                 if do_preds :
                     new_s2_arr = cp.array((s2_arr + LocErr2))[:,:,0]
                     log_integrated_term = -cp.log(2*np.pi*new_s2_arr) - cp.sum((Cs[:,:,nb_locs-current_step-1] - m_arr)**2,axis=2)/(2*new_s2_arr)
