@@ -145,7 +145,6 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
     cur_d2s = cp.mean(cur_d2s, axis = 2)
     cur_d2s = cur_d2s[:,:,None]
     cur_d2s = cp.array(cur_d2s)
-    cur_d2s**0.5
     
     sub_Bs = cur_Bs.copy()[:,:cur_Bs.shape[1]//nb_states,:nb_substeps] # list of possible current states we can meet to compute the proba of staying in the FOV
     sub_ds = cp.mean(ds[sub_Bs]**2, axis = 2)**0.5 # corresponding list of d
@@ -167,7 +166,7 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
     if nb_substeps > 1 and 0:
         cur_len = nb_substeps + 1
         fuse_pos = np.arange(1,nb_substeps)
-        m_arr, s2_arr, LP, cur_Bs = fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs,Cs[:,:,0],LocErr2, cur_len, nb_Tracks, fuse_pos = fuse_pos, nb_states = nb_states, nb_dims = nb_dims)
+        m_arr, s2_arr, LP, cur_Bs = fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs,LocErr2, cur_len, nb_Tracks, fuse_pos = fuse_pos, nb_states = nb_states, nb_dims = nb_dims)
     
     current_step += 1
 
@@ -193,9 +192,7 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
         cur_d2s = cp.mean(cur_d2s, axis = 2)
         cur_d2s = cur_d2s[:,:,None]
         LT = get_Ts_from_Bs(cur_states, TrMat)
-        
-        #np.arange(32)[None][:,TT]
-        #np.arange(32)[None][:,1:][:,TT[:-1]]
+
         # repeat the previous matrix to account for the states variations due to the new position
         m_arr = cp.repeat(m_arr, nb_states**nb_substeps , axis = 1)
         s2_arr = cp.repeat(s2_arr, nb_states**nb_substeps, axis = 1)
@@ -215,8 +212,7 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
         if nb_substeps > 1 and 0:
             cur_len = cur_Bs.shape[-1]
             fuse_pos = np.arange(1,nb_substeps)+nb_substeps
-            #m_arr, s2_arr, LP, cur_Bs = fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs, cur_len, nb_Tracks, fuse_pos = fuse_pos, nb_states = nb_states, nb_dims = nb_dims)
-            m_arr, s2_arr, LP, cur_Bs = fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs,Cs[:,:,nb_locs-current_step-2], LocErr2, cur_len, nb_Tracks, fuse_pos, nb_states = nb_states, nb_dims = nb_dims)
+            m_arr, s2_arr, LP, cur_Bs = fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs, LocErr2, cur_len, nb_Tracks, fuse_pos, nb_states = nb_states, nb_dims = nb_dims)
 
         cur_nb_Bs = len(cur_Bs[0]) # current number of sequences of states
         
@@ -242,17 +238,10 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
                     for state in range(nb_states):
                         B_is_state = cur_Bs[:,:,-1] == state
                         preds[:,nb_locs-current_step+frame_len-2, state] = asnumpy(np.sum(B_is_state*P,axis = 1)/np.sum(P,axis = 1))
-                
-                #cur_Bs = cur_Bs[:,:cur_nb_Bs//nb_states, :-1]
-                #m_arr, s2_arr, LP = fuse_tracks(m_arr, s2_arr, LP, cur_nb_Bs, nb_states)
-                
-                #m_arr_1, s2_arr_1, LP_1 = fuse_tracks(m_arr, s2_arr, LP, cur_nb_Bs, nb_states)
-                
+
                 cur_len = cur_Bs.shape[-1]
                 fuse_pos = np.arange(cur_len-1,cur_len)
-                #m_arr_2, s2_arr_2, LP_2, cur_Bs_2 = fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs, cur_len, nb_Tracks, fuse_pos, nb_states = nb_states, nb_dims = nb_dims)
-                #m_arr, s2_arr, LP, cur_Bs = fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs, cur_len, nb_Tracks, fuse_pos, nb_states = nb_states, nb_dims = nb_dims)
-                m_arr, s2_arr, LP, cur_Bs = fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs,Cs[:,:,nb_locs-current_step-2], LocErr2, cur_len, nb_Tracks, fuse_pos, nb_states = nb_states, nb_dims = nb_dims)
+                m_arr, s2_arr, LP, cur_Bs = fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs, LocErr2, cur_len, nb_Tracks, fuse_pos, nb_states = nb_states, nb_dims = nb_dims)
                 cur_nb_Bs = len(cur_Bs[0])
                 removed_steps += 1
         #print('frame',time.time() - t0)
@@ -338,7 +327,7 @@ def fuse_tracks(m_arr, s2_arr, LP, cur_nb_Bs, nb_states = 2):
     # np.mean(np.abs(s2_arr0-s2_arr1))
     return m_arr, s2_arr, LP, 
 
-def fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs, Ci,LocErr2, cur_len, nb_Tracks, fuse_pos, nb_states = 2, nb_dims = 2):
+def fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs,LocErr2, cur_len, nb_Tracks, fuse_pos, nb_states = 2, nb_dims = 2):
     '''
     The probabilities of the pairs of tracks must be added
     I chose to define the updated m_arr and s2_arr as the weighted average (of the variance for s2_arr)
@@ -347,12 +336,7 @@ def fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs, Ci,LocErr2, cur_len, nb_Track
     I correct the values in the exponetial to keep the maximal exp value at 0
     '''
     # cut the matrixes so the resulting matrices only vary for their last state
-    '''
-    if s2_arr.shape[0] ==1:
-        s2_arr = np.repeat(s2_arr, nb_Tracks, axis = 0)
-    s2_arr_iplus1 = cp.array((s2_arr + LocErr2))[:,:,0]
-    log_integrated_term = -cp.log(2*np.pi*s2_arr_iplus1) - cp.sum((Ci - m_arr)**2,axis=2)/(2*s2_arr_iplus1)
-    #'''
+    
     fuse_idx = np.zeros(cur_len)
     fuse_idx[fuse_pos] = 1
         
@@ -394,11 +378,7 @@ def fuse_tracks_general(m_arr, s2_arr, LP, cur_Bs, Ci,LocErr2, cur_len, nb_Track
     s2_arr = s2_arr.reshape([s2_arr.shape[0]] + dims + [1])
     new_m_arr = np.sum(weights * m_arr, axis = rm_axis)
     new_s2_arr = np.sum(weights * s2_arr , axis = rm_axis)
-    '''
-    indices = (norm_weights == np.max(norm_weights, axis = rm_axis, keepdims = True))
-    new_m_arr = m_arr[indices].reshape((nb_Tracks, final_nb_Bs, nb_dims))
-    new_s2_arr =  s2_arr[indices].reshape((s2_arr.shape[0], final_nb_Bs, 1))
-    '''
+    
     LP = LP.reshape([nb_Tracks] + dims)
     new_LP = np.log(np.sum(np.exp(LP-max_LP), axis = rm_axis)) + np.squeeze(max_LP, axis = rm_axis)
 
