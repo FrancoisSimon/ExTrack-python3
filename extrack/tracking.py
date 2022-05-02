@@ -808,6 +808,10 @@ def get_2DSPT_params(all_tracks,
             sorted_tracks.append(all_tracks[l])
     all_tracks = sorted_tracks
     
+    if frame_len <= nb_substeps:
+        print('Warning frame_len has to be at least nb_substeps + 1')
+        frame_len = nb_substeps + 1
+    
     fit = minimize(cum_Proba_Cs, params, args=(all_tracks, dt, cell_dims, nb_states, nb_substeps, frame_len, verbose, workers), method = method, nan_policy = 'propagate')
     
     return fit
