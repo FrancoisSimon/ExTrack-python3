@@ -583,7 +583,7 @@ def cum_Proba_Cs(params, all_tracks, dt, cell_dims, nb_states, nb_substeps, fram
                 else:
                     isBLs.append(1)
         Csss.reverse()
-        args_prod = np.array(list(product(Csss, [LocErr], [ds], [Fs], [TrMat],[pBL], [0],[cell_dims], [nb_substeps], [frame_len], [min_len])))
+        args_prod = np.array(list(product(Csss, [LocErr], [ds], [Fs], [TrMat],[pBL], [0],[cell_dims], [nb_substeps], [frame_len], [min_len])), dtype=object)
         args_prod[:, 6] = isBLs
         
         Cs, LocErr, ds, Fs, TrMat,pBL,isBL, cell_dims, nb_substeps, frame_len, min_len = args_prod[0]
