@@ -237,7 +237,7 @@ def P_Cs_inter_bound_stats(Cs, LocErr, ds, Fs, TrMat, pBL=0.1, isBL = 1, cell_di
                     
                     for state in range(nb_states):
                         B_is_state = cur_Bs[:,:,-1] == state
-                        preds[:,nb_locs-current_step+frame_len-2, state] = asnumpy(np.sum(B_is_state*P,axis = 1)/np.sum(P,axis = 1))
+                        preds[:,nb_locs-current_step+frame_len-1, state] = asnumpy(np.sum(B_is_state*P,axis = 1)/np.sum(P,axis = 1))
 
                 cur_len = cur_Bs.shape[-1]
                 fuse_pos = np.arange(cur_len-1,cur_len)
@@ -464,7 +464,17 @@ def predict_Bs(all_tracks,
     extrack.visualization.visualize_states_durations
     '''
     nb_substeps=1 # substeps should not impact the step labelling
-    LocErr, ds, Fs, TrMat, pBL = extract_params(params, dt, nb_states, nb_substeps)
+    if type(params) == type(Parameters()):
+        LocErr, ds, Fs, TrMat, pBL = extract_params(params, dt, nb_states, nb_substeps)
+    elif type(params) == type({}):
+        param_kwargs = []
+        for param in params:
+            param_kwargs.append({'name' : param, 'value' : params[param], 'vary': False})
+        new_params = Parameters()
+        [new_params.add(**param_kwargs[k]) for k in range(len(params))]
+        LocErr, ds, Fs, TrMat, pBL = extract_params(new_params, dt, nb_states, nb_substeps)
+    else:
+        raise TypeError("params nust be either of the class 'lmfit.parameter.Parameters' or a dictionary of the relevant parameters")
     all_pred_Bs = []
 
     l_list = np.sort(np.array(list(all_tracks.keys())).astype(int)).astype(str)
