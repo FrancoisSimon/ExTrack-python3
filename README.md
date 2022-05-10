@@ -39,11 +39,11 @@ all_tracks: dict describing the tracks with track length as keys (number of time
 
 # Tutorial
 
-See either:
+Test codes can be found at these location: 
 - tests/test_extrack.py
 - or tests/tutorial_extrack.ipynb
-These contain the most important functions. The .ipynb file is more didactic. One has to install jupyter to use it: `pip install jupyter`.
-the tutorial files including the files containing tracks must be downloaded from this repository in order to do the tutorial.
+These contain the most important modules in a comprehensive framework. 
+The .ipynb file is more didactic. One has to install jupyter to use it: `pip install jupyter`.
 
 **Document here how to open a Jupyter notebook**
 
