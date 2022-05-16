@@ -800,9 +800,6 @@ def get_2DSPT_params(all_tracks,
             min_values = {'LocErr' : 0.005, 'D0' : 0, 'D1' : 0, 'D2' :  0.001, 'D3' : 0.001, 'F0' : 0.001,  'F1' : 0.001, 'F2' : 0.001, 'p01' : 0.001, 'p02' : 0.001, 'p03' : 0.001, 'p10' :0.001, 'p12' : 0.001, 'p13' : 0.001, 'p20' :0.001, 'p21' :0.001, 'p23' : 0.001, 'p30' :0.001, 'p31' :0.001, 'p32' : 0.001, 'pBL' : 0.001}
         if len(max_values) != 21:
             max_values = {'LocErr' : 0.023, 'D0' : 1, 'D1' : 1, 'D2' :  10, 'D3' : 100, 'F0' : 0.999,  'F1' : 0.999, 'F2' : 0.999, 'p01' : 1, 'p02' : 1, 'p03' : 1, 'p10' :1, 'p12' : 1, 'p13' : 1, 'p20' : 1, 'p21' : 1, 'p23' : 1, 'p30' : 1, 'p31' : 1, 'p32' : 1, 'pBL' : 0.99}
-    else:
-        if len(vary_params) == 7 or len(estimated_vals) == 7 or len(min_values) == 7 or len(max_values) == 7:
-            raise ValueError('vary_params, estimated_vals, min_values and max_values have to be correctly specified if more than 4 states')
     
     if not str(all_tracks.__class__) == "<class 'dict'>":
         raise ValueError('all_tracks should be a dictionary of arrays with n there number of steps as keys')
