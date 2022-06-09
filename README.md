@@ -60,7 +60,8 @@ The .ipynb file is more didactic. One has to install jupyter to use it: `pip ins
 `sudo python setup.py install`
 
 ## From Windows using anaconda prompt:
-Need to install git if not already installed:
+
+Need to install git if not already installed.
 
 `git clone https://github.com/FrancoisSimon/ExTrack-python3.git` One can also just manually download the package if git is not install
 
