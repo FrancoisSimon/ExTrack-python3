@@ -484,9 +484,9 @@ def predict_Bs(all_tracks,
     for l in l_list:
         if len(all_tracks[l]) > 0:
             if int(l) == max_len:
-                isBL = 1
-            else:
                 isBL = 0
+            else:
+                isBL = 1
             LP_Cs, trunkated_Bs, pred_Bs = P_Cs_inter_bound_stats(all_tracks[l], LocErr, ds, Fs, TrMat, pBL,isBL, cell_dims, nb_substeps = 1, frame_len = frame_len, do_preds = 1, min_len = min_len)
             all_pred_Bs.append(pred_Bs)
     
