@@ -51,9 +51,7 @@ The .ipynb file is more didactic. One has to install jupyter to use it: `pip ins
 
 ## From Unix/Mac:
 
-if git is not installed:
-
-`sudo apt install git`
+`sudo apt install git` (if git is not installed)
 
 `git clone https://github.com/FrancoisSimon/ExTrack-python3.git`
 
