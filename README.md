@@ -19,9 +19,9 @@ Optional: jupyter, cupy
 
 # Installation (from pip)
 
-## Install dependencies
-
 (needs to be run in anaconda prompt for anaconda users on windows)
+
+## Install dependencies
 
 `pip install numpy lmfit xmltodict matplotlib pandas`
 
@@ -61,7 +61,9 @@ if git is not installed:
 Need to install git if not already installed:
 
 `git clone https://github.com/FrancoisSimon/ExTrack-python3.git` One can also just manually download the package if git is not install
+
 `cd ExTrack-python3`
+
 `python setup.py install` from the ExTrack-python3 directory
 
 
