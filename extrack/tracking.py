@@ -820,5 +820,6 @@ def get_2DSPT_params(all_tracks,
         frame_len = nb_substeps + 1
     
     fit = minimize(cum_Proba_Cs, params, args=(all_tracks, dt, cell_dims, nb_states, nb_substeps, frame_len, verbose, workers), method = method, nan_policy = 'propagate')
-    
+    if verbose == 0:
+        print('')
     return fit
