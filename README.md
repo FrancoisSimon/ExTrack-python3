@@ -47,16 +47,23 @@ The .ipynb file is more didactic. One has to install jupyter to use it: `pip ins
 
 **Document here how to open a Jupyter notebook**
 
-# Installation (from this Gitlab) repository
+# Installation from this Gitlab repository
 
+## From Unix/Mac:
 if git is not installed:
 `sudo apt install git`
 
-Then:
-
 `git clone https://github.com/FrancoisSimon/ExTrack-python3.git`
+`cd ExTrack-python3`
+`sudo python setup.py install`
 
-`sudo python setup.py install` (brocken)
+## From Windows using anaconda prompt:
+Need to install git if not already installed:
+
+`git clone https://github.com/FrancoisSimon/ExTrack-python3.git` One can also just manually download the package if git is not install
+`cd ExTrack-python3`
+`python setup.py install` from the ExTrack-python3 directory
+
 
 # Usage
 ## Main functions
