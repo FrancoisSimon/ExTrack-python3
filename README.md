@@ -50,11 +50,15 @@ The .ipynb file is more didactic. One has to install jupyter to use it: `pip ins
 # Installation from this Gitlab repository
 
 ## From Unix/Mac:
+
 if git is not installed:
+
 `sudo apt install git`
 
 `git clone https://github.com/FrancoisSimon/ExTrack-python3.git`
+
 `cd ExTrack-python3`
+
 `sudo python setup.py install`
 
 ## From Windows using anaconda prompt:
