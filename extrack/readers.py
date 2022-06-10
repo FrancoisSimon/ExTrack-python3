@@ -7,8 +7,8 @@ def read_trackmate_xml(path,
                        dist_th = 0.3,
                        start_frame = 0,
                        remove_no_disp = True, 
-                       opt_metrics_names = [], # e.g. ['pred_0', 'pred_1'],
-                       opt_metrics_types = None # will assum 'float64' type if none, otherwise specify a list of same length as opt_metrics_names: e.g. ['float64','float64']
+                       opt_metrics_names = ['t', 'x'], # e.g. ['pred_0', 'pred_1'],
+                       opt_metrics_types = [int, 'float64'] # will assum 'float64' type if none, otherwise specify a list of same length as opt_metrics_names: e.g. ['float64','float64']
                        ):
     """
     Converts xml output from trackmate to a list of arrays of tracks
@@ -63,8 +63,8 @@ def read_trackmate_xml(path,
                 if np.any([l]*len(lengths) == np.array(lengths)) :
                     traces[str(l)].append(track[:, 0:2])
                     frames[str(l)].append(track[:, 3])
-                    for m in opt_metrics_names:
-                        opt_metrics[m][str(l)].append(opt_met)
+                    for k, m in enumerate(opt_metrics_names):
+                        opt_metrics[m][str(l)].append(opt_met[:, k])
                 elif l > np.max(lengths):
                     l = np.max(lengths)
                     traces[str(l)].append(track[:l, 0:2])
